@@ -9,6 +9,7 @@ import SwiftUI
 
 struct HomeView: View {
     @State private var navigateToProfile = false
+    @State private var goals : [String] = ["Hike 4 times", "hike 200 miles", "get boots", "hike a new hike", "test scroll", "test again"]
     
     var body: some View {
         VStack {
@@ -17,11 +18,11 @@ struct HomeView: View {
                 Button(action: {
                     navigateToProfile = true
                 }){
-                    Image(systemName: "star.fill") // Your icon make into profile image
+                    Image(systemName: "person.fill") // Your icon make into profile image
                         .font(.title)
-                        .foregroundColor(.yellow)
                         .padding(.leading, 10)
                         .padding(.top, 10)
+                        .padding(.trailing, 20)
                 }
                 .navigationDestination(isPresented: $navigateToProfile) {
                     ProfileView()
@@ -46,9 +47,23 @@ struct HomeView: View {
                     
                     VStack{
                         Text("CheckList")
-                        
-                        RoundedRectangle(cornerRadius:25)
-                            .frame(width: 150, height:150)
+                        ScrollView{
+                            VStack(alignment: .leading, spacing: 10) { // Arrange text items vertically
+                                ForEach(goals, id: \.self) { item in
+                                    Text(item)
+                                        .font(.headline)
+                                        .padding(.horizontal)
+                                }
+                            }
+                            .padding() // Add padding around the text items
+                            .background(
+                                RoundedRectangle(cornerRadius: 15, style: .continuous) // The rounded rectangle shape
+                                    .fill(Color.white) // Fill the shape with a color
+                                    .frame(width: 100, height: 100)
+                            )
+                            .padding()
+                            
+                        }
                     }
                 }
                 .frame(maxWidth: .infinity)
