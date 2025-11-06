@@ -6,28 +6,23 @@
 //
 
 import SwiftUI
-struct Trail: Identifiable{
-    let id = UUID()
-    let name: String
-    let difficulty: String
-    let durationHours:Double
-    let distanceTravel:String
-}
 
 struct ProfileView: View {
+    @EnvironmentObject var dataManager: DataManager
+    @EnvironmentObject var userPreferences: UserPreferences
+    
+    @State var difficulty: String
+    @State var minDistance: Double
+    @State var maxDistance: Double
+    @State var elevation: String
+    @State var helper: Bool
+    
     @State private var filteredTrails: [Trail] = []
     @State private var navigateToHome = false
     @State private var navigateToSettings = false
     @State private var preferences: [String: String] = ["Difficulty": "Easy", "Milage" : "4-6", "Helper" : "Active"]
     
-    
-    //sample data
-    let allTrails = [
-        Trail(name:"EasyLoop", difficulty:"Easy", durationHours:1.0, distanceTravel: "0-2 miles"),
-        Trail(name:"MidLoop", difficulty:"Moderate", durationHours:2.0, distanceTravel: "2-4 miles"),
-        Trail(name:"HardLoop", difficulty:"Hard", durationHours:4.0, distanceTravel: "6+ miles"),
-        Trail(name:"coolLoop", difficulty:"Moderate", durationHours:3.5, distanceTravel: "4-6 miles")
-    ]
+
     
     var body: some View {
             VStack {
@@ -116,7 +111,7 @@ struct ProfileView: View {
 //                        }
                     }
                     .padding()
-                    .onAppear(perform: filterTrails)
+//                    .onAppear(perform: filterTrails)
                     
                 }
 
@@ -125,31 +120,50 @@ struct ProfileView: View {
             
             .frame(maxHeight: .infinity, alignment: .top)
             .padding()
+            .onAppear(){
+                loadCurrentPreferences()
+            }
         }
-    
-    func filterTrails() {
-        let answers = QuestionnaireManager.loadAnswers()
-        let preferredDifficulty = answers["Which difficulty level do you prefer?"]
-        
-        let ableDistance = answers["How far do you think you can hike right now?"]
-        
-        if let pref = preferredDifficulty{
-            filteredTrails = allTrails.filter { $0.difficulty == pref}
-        } else {
-            filteredTrails = allTrails
-        }
-        
-        if let pref = ableDistance{
-            filteredTrails = allTrails.filter {$0.distanceTravel == pref}
-        } else {
-            filteredTrails = allTrails
-        }
+
+    private func loadCurrentPreferences() {
+        let prefs = userPreferences.trailPreferences
+        difficulty = String(prefs.difficulty)
+        minDistance = Double(prefs.minDistance)
+        maxDistance = Double(prefs.maxDistance)
+        elevation = String(prefs.elevation)
+        helper = Bool(prefs.helper)
     }
+
+    
+//    func filterTrails() {
+//        let answers = QuestionnaireManager.loadAnswers()
+//        let preferredDifficulty = answers["Which difficulty level do you prefer?"]
+//        
+//        let ableDistance = answers["How far do you think you can hike right now?"]
+//        
+//        if let pref = preferredDifficulty{
+//            filteredTrails = allTrails.filter { $0.difficulty == pref}
+//        } else {
+//            filteredTrails = allTrails
+//        }
+//        
+//        if let pref = ableDistance{
+//            filteredTrails = allTrails.filter {$0.distanceTravel == pref}
+//        } else {
+//            filteredTrails = allTrails
+//        }
+//    }
 
 }
 
 
 
-#Preview {
-    ProfileView()
+#Preview("Profile") {
+    let prefs = UserPreferences()
+    let dataManager = DataManager(userPreferences: prefs)
+    dataManager.userPreferences = prefs
+    
+    return ProfileView()
+        .environmentObject(prefs)
+        .environmentObject(dataManager)
 }

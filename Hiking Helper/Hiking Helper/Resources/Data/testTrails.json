@@ -17,7 +17,6 @@
       "terrainTypes": ["Forest", "Rocky"],
       "description": "Beautiful forested trail with scenic overlooks and moderate elevation changes.",
       "userRating": 4.5,
-      "source": "OpenStreetMap"
     },
     {
       "id": "1002",
@@ -31,7 +30,6 @@
       "terrainTypes": ["Mountain", "Rocky"],
       "description": "Challenging climb to stunning views at Table Rock summit. Steep sections near the top.",
       "userRating": 4.8,
-      "source": "OpenStreetMap"
     },
     {
       "id": "1003",
@@ -45,7 +43,6 @@
       "terrainTypes": ["Forest", "Creek"],
       "description": "Follows a mountain stream through lush forest. Great for families.",
       "userRating": 4.3,
-      "source": "OpenStreetMap"
     },
     {
       "id": "1004",
@@ -59,7 +56,6 @@
       "terrainTypes": ["Forest"],
       "description": "Short accessible trail leading to a dramatic cliff overlook.",
       "userRating": 4.6,
-      "source": "OpenStreetMap"
     },
     {
       "id": "1005",
@@ -73,7 +69,6 @@
       "terrainTypes": ["Forest", "Waterfall"],
       "description": "Popular trail featuring a spectacular 420-foot waterfall cascading through a rocky gorge.",
       "userRating": 4.7,
-      "source": "OpenStreetMap"
     },
     {
       "id": "1006",
@@ -87,7 +82,6 @@
       "terrainTypes": ["Mountain", "Forest", "Creek"],
       "description": "Long-distance backpacking trail through the Blue Ridge Mountains. Multi-day adventure.",
       "userRating": 4.9,
-      "source": "OpenStreetMap"
     },
     {
       "id": "1007",
@@ -101,7 +95,6 @@
       "terrainTypes": ["Forest"],
       "description": "Gentle family-friendly loop through mountain laurel and hardwoods.",
       "userRating": 4.2,
-      "source": "OpenStreetMap"
     },
     {
       "id": "1008",
@@ -115,7 +108,6 @@
       "terrainTypes": ["Mountain", "Rocky"],
       "description": "Steep ascent rewarded with 360-degree views from the summit.",
       "userRating": 4.5,
-      "source": "OpenStreetMap"
     },
     {
       "id": "1009",
@@ -129,7 +121,6 @@
       "terrainTypes": ["Lake", "Forest"],
       "description": "Scenic lakeside trail with multiple swimming and fishing spots.",
       "userRating": 4.4,
-      "source": "OpenStreetMap"
     },
     {
       "id": "1010",
@@ -143,7 +134,6 @@
       "terrainTypes": ["Rocky", "Grassland"],
       "description": "Short walk to unique granite dome with wildflowers in spring.",
       "userRating": 4.1,
-      "source": "OpenStreetMap"
     },
     {
       "id": "1011",
@@ -157,7 +147,6 @@
       "terrainTypes": ["Forest", "Lake"],
       "description": "Network of trails around mountain lakes with historic CCC structures.",
       "userRating": 4.3,
-      "source": "OpenStreetMap"
     },
     {
       "id": "1012",
@@ -171,7 +160,6 @@
       "terrainTypes": ["River", "Forest"],
       "description": "Wild and scenic river corridor with waterfalls and swimming holes.",
       "userRating": 4.6,
-      "source": "OpenStreetMap"
     },
     {
       "id": "1013",
@@ -185,7 +173,6 @@
       "terrainTypes": ["Swamp", "Boardwalk"],
       "description": "Elevated boardwalk through old-growth bottomland hardwood forest.",
       "userRating": 4.7,
-      "source": "OpenStreetMap"
     },
     {
       "id": "1014",
@@ -199,7 +186,6 @@
       "terrainTypes": ["Beach", "Maritime Forest"],
       "description": "Coastal trail through maritime forest to pristine beach and historic lighthouse.",
       "userRating": 4.4,
-      "source": "OpenStreetMap"
     },
     {
       "id": "1015",
@@ -213,7 +199,6 @@
       "terrainTypes": ["Mountain", "Forest", "Historic"],
       "description": "Historic Revolutionary War battle site with challenging ridgeline hiking.",
       "userRating": 4.5,
-      "source": "OpenStreetMap"
     }
   ]
 }

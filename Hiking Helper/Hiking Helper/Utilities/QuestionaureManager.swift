@@ -7,42 +7,23 @@
 
 import Foundation
 
-struct Question: Identifiable, Codable {
-    let id: UUID
-    let text: String
-    let options: [String]
-    var selectedOption: String?
-}
-
-struct QuestionnaireManager {
-    static let storageKey = "SavedQuestionnaireResponses"
-    // Save full list of questions + answers
+class QuestionnaireManager {
+    private static let questionsKey = "savedQuestions"
+    
     static func save(_ questions: [Question]) {
-        if let encoded = try? JSONEncoder().encode(questions) {
-            UserDefaults.standard.set(encoded, forKey: storageKey)
-        }
+        guard let data = try? JSONEncoder().encode(questions) else { return }
+        UserDefaults.standard.set(data, forKey: questionsKey)
     }
-    // Load all saved questions (or nil if none saved)
+    
     static func load() -> [Question]? {
-        if let data = UserDefaults.standard.data(forKey: storageKey),
-           let decoded = try? JSONDecoder().decode([Question].self, from: data) {
-            return decoded
+        guard let data = UserDefaults.standard.data(forKey: questionsKey),
+              let questions = try? JSONDecoder().decode([Question].self, from: data) else {
+            return nil
         }
-        return nil
+        return questions
     }
-    // Load as a dictionary of [QuestionText: Answer] for filtering
-    static func loadAnswers() -> [String: String] {
-        guard let questions = load() else { return [:] }
-        var answers: [String: String] = [:]
-        for q in questions {
-            if let answer = q.selectedOption {
-                answers[q.text] = answer
-            }
-        }
-        return answers
-    }
-    // Optional: clear all stored answers
-    static func reset() {
-        UserDefaults.standard.removeObject(forKey: storageKey)
+    
+    static func clear() {
+        UserDefaults.standard.removeObject(forKey: questionsKey)
     }
 }
