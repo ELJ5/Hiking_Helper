@@ -1,31 +1,28 @@
-//
-//  ContentView.swift
-//  Hiking Helper
-//
-//  Created by Eliana Johnson on 10/4/25.
-//
-
 import SwiftUI
 
 struct ContentView: View {
-    @EnvironmentObject var dataManager: DataManager
     @EnvironmentObject var userPreferences: UserPreferences
+    @EnvironmentObject var dataManager: DataManager
     
     var body: some View {
-        TabView {
-            ProfileView()
-                .tabItem {
-                    Label("Users", systemImage: "person.3")
-                }
-            
-            SettingsView()
-                .tabItem {
-                    Label("Settings", systemImage: "gear")
-                }
+        Group {
+            if userPreferences.needsOnboarding {
+                QuestionnaireView()
+            } else {
+                HomeView()
+                    .environmentObject(userPreferences)
+                    .environmentObject(dataManager)
+            }
         }
     }
 }
 
-#Preview {
-    ContentView()
-}
+//#Preview {
+//    let prefs = UserPreferences()
+//    let manager = DataManager()
+//    manager.userPreferences = prefs
+//    
+//    return ContentView()
+//        .environmentObject(prefs)
+//        .environmentObject(manager)
+//}

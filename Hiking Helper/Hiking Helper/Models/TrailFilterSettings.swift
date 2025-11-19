@@ -16,6 +16,7 @@ struct FilterPreferences: Codable {
     var helper: Bool
     var location: String?
     var travelRadius: String  // Distance willing to travel
+
     
     // Experience level
     var hikingFrequency: String

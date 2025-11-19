@@ -11,6 +11,7 @@ struct QuestionnaireView: View {
     @State private var currentQuestion = 0
     @State private var showLocationInput = false
     @State private var cityInput = ""
+    @FocusState private var isTextFieldFocused: Bool
     
     var body: some View {
         NavigationStack {
@@ -26,73 +27,70 @@ struct QuestionnaireView: View {
                         .tint(.green)
                     
                     // Current question
-                    let question = questions[currentQuestion]
-                    
-                    VStack(alignment: .leading, spacing: 15) {
-                        Text("Question \(currentQuestion + 1) of \(questions.count)")
-                            .font(.subheadline)
-                            .foregroundColor(.gray)
+                    if currentQuestion < questions.count {
+                        let question = questions[currentQuestion]
                         
-                        Text(question.text)
-                            .font(.headline)
-                            .multilineTextAlignment(.leading)
-                        
-                        // Handle text input for city
-                        if question.preferenceKey == "location" && question.selectedOption == "input" {
-                            TextField("Enter city name", text: $cityInput)
-                                .textFieldStyle(.roundedBorder)
-                                .padding(.vertical, 8)
-                        } else {
-                            // Radio button options
-                            ForEach(question.options, id: \.self) { option in
-                                Button(action: {
-                                    selectOption(option, for: currentQuestion)
-                                }) {
-                                    HStack {
-                                        Image(systemName: question.selectedOption == option ? "circle.inset.filled" : "circle")
-                                            .foregroundColor(.blue)
-                                        Text(option)
-                                            .foregroundColor(.primary)
+                        VStack(alignment: .leading, spacing: 15) {
+                            Text("Question \(currentQuestion + 1) of \(questions.count)")
+                                .font(.subheadline)
+                                .foregroundColor(.gray)
+                            
+                            Text(question.text)
+                                .font(.headline)
+                                .multilineTextAlignment(.leading)
+                            
+                            // Handle text input for city
+                            if question.preferenceKey == "location" && question.selectedOption == "input" {
+                                VStack(spacing: 12) {
+                                    TextField("Enter city name", text: $cityInput)
+                                        .textFieldStyle(.roundedBorder)
+                                        .padding(.vertical, 8)
+                                        .focused($isTextFieldFocused)
+                                        .submitLabel(.done)
+                                        .onSubmit {
+                                            submitCityInput()
+                                        }
+                                    
+                                    Button(action: submitCityInput) {
+                                        Text("Continue")
+                                            .frame(maxWidth: .infinity)
+                                            .padding()
+                                            .background(!cityInput.trimmingCharacters(in: .whitespaces).isEmpty ? Color.blue : Color.gray)
+                                            .foregroundColor(.white)
+                                            .cornerRadius(10)
                                     }
-                                    .padding(.vertical, 6)
+                                    .disabled(cityInput.trimmingCharacters(in: .whitespaces).isEmpty)
                                 }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                    }
-                    .padding()
-                    .background(Color(.systemBackground))
-                    .cornerRadius(10)
-                    .shadow(radius: 2)
-                }
-                
-                Spacer()
-                
-                // Navigation buttons
-                HStack {
-                    if currentQuestion > 0 {
-                        Button("Back") {
-                            withAnimation {
-                                currentQuestion -= 1
+                            } else {
+                                // Radio button options
+                                ForEach(question.options, id: \.self) { option in
+                                    Button(action: {
+                                        selectOption(option, for: currentQuestion)
+                                    }) {
+                                        HStack {
+                                            Image(systemName: question.selectedOption == option ? "circle.inset.filled" : "circle")
+                                                .foregroundColor(.blue)
+                                            Text(option)
+                                                .foregroundColor(.primary)
+                                        }
+                                        .padding(.vertical, 6)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
                             }
                         }
                         .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color.gray.opacity(0.2))
+                        .background(Color(.systemBackground))
                         .cornerRadius(10)
+                        .shadow(radius: 2)
                     }
-                    
-                    Button(currentQuestion == questions.count - 1 ? "Submit" : "Next") {
-                        handleNext()
-                    }
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(canProceed() ? Color.blue : Color.gray)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
-                    .disabled(!canProceed())
+                } else {
+                    // Show loading state
+                    ProgressView("Loading questions...")
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-                .padding(.top, 10)
+                
+                Spacer()
             }
             .padding()
             .onAppear(perform: loadQuestions)
@@ -189,44 +187,37 @@ struct QuestionnaireView: View {
         questions[questionIndex].selectedOption = option
         QuestionnaireManager.save(questions)
         
-        // Auto-advance for some questions (optional)
-        if questionIndex < questions.count - 1 {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                withAnimation {
-                    handleNext()
-                }
+        // Auto-advance after selection
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            withAnimation {
+                advanceToNextQuestion()
             }
         }
     }
     
-    func canProceed() -> Bool {
-        let question = questions[currentQuestion]
+    func submitCityInput() {
+        let trimmedInput = cityInput.trimmingCharacters(in: .whitespaces)
+        guard !trimmedInput.isEmpty else { return }
         
-        // For city input, check if text is entered
-        if question.preferenceKey == "location" && question.selectedOption == "input" {
-            return !cityInput.trimmingCharacters(in: .whitespaces).isEmpty
+        questions[currentQuestion].selectedOption = trimmedInput
+        QuestionnaireManager.save(questions)
+        
+        // Dismiss keyboard
+        isTextFieldFocused = false
+        
+        // Advance to next question
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            withAnimation {
+                advanceToNextQuestion()
+            }
         }
-        
-        // For regular questions, check if option selected
-        return question.selectedOption != nil
     }
     
-    func handleNext() {
-        guard canProceed() else { return }
-        
-        // Save city input if on location question
-        if questions[currentQuestion].preferenceKey == "location" &&
-           questions[currentQuestion].selectedOption == "input" {
-            questions[currentQuestion].selectedOption = cityInput
-            QuestionnaireManager.save(questions)
-        }
-        
-        withAnimation {
-            if currentQuestion < questions.count - 1 {
-                currentQuestion += 1
-            } else {
-                submitAnswers()
-            }
+    func advanceToNextQuestion() {
+        if currentQuestion < questions.count - 1 {
+            currentQuestion += 1
+        } else {
+            submitAnswers()
         }
     }
     
@@ -282,7 +273,6 @@ struct QuestionnaireView: View {
                 prefs.elevation = answer.components(separatedBy: " (").first ?? answer
                 
             case "locationPermission":
-                // Handle location permission (implement location services if needed)
                 break
                 
             case "location":
@@ -323,7 +313,16 @@ struct QuestionnaireView: View {
 }
 
 #Preview {
-    QuestionnaireView()
-        .environmentObject(UserPreferences())
-        .environmentObject(DataManager(userPreferences: UserPreferences()))
+    let prefs = UserPreferences()
+    let dataManager = DataManager(userPreferences: prefs)
+    
+    // Initialize with mock data to avoid crashes
+    let view = QuestionnaireView()
+    
+    return view
+        .environmentObject(prefs)
+        .environmentObject(dataManager)
+        .onAppear {
+            // Prevent any persistence calls in preview
+        }
 }

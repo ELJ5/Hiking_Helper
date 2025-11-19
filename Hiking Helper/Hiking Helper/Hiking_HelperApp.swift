@@ -5,36 +5,37 @@ struct HikingHelperApp: App {
     @StateObject private var userPreferences = UserPreferences()
     @StateObject private var dataManager: DataManager
     
-    // Add this state to switch views
-    @State private var showDebug = false
     
     init() {
-        // Create a temporary instance to initialize dataManager
-        let tempPreferences = UserPreferences()
-        
-        // Initialize the StateObject for dataManager
-        _dataManager = StateObject(wrappedValue: DataManager(userPreferences: tempPreferences))
+        let prefs = UserPreferences()
+        _userPreferences = StateObject(wrappedValue: prefs)
+        _dataManager = StateObject(wrappedValue: DataManager(userPreferences: prefs))
     }
     
     var body: some Scene {
         WindowGroup {
-            if userPreferences.needsOnboarding {
-                    QuestionnaireView()
-                        .environmentObject(userPreferences)
-                        .environmentObject(dataManager)
-                        .onAppear {
-                            dataManager.userPreferences = userPreferences
+            NavigationStack{
+            ContentView()
+                
+                .environmentObject(userPreferences)
+                .environmentObject(dataManager)
+                .onAppear {
+                    // Debug: List all JSON files in bundle
+                    if let resourcePath = Bundle.main.resourcePath {
+                        do {
+                            let contents = try FileManager.default.contentsOfDirectory(atPath: resourcePath)
+                            let jsonFiles = contents.filter { $0.hasSuffix(".json") }
+                            print("📦 JSON files in bundle: \(jsonFiles)")
+                        } catch {
+                            print("❌ Could not list bundle: \(error)")
                         }
-                } else {
-                    HomeView()
-                        .environmentObject(userPreferences)
-                        .environmentObject(dataManager)
-                        .onAppear {
-                            dataManager.userPreferences = userPreferences
-                            dataManager.loadTrailsIfNeeded()
-                        }
+                    }
+
+                    if !userPreferences.needsOnboarding {
+                        dataManager.loadTrailsIfNeeded()
+                    }
                 }
-            }
+        }
         }
     }
-
+}

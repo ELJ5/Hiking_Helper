@@ -5,73 +5,101 @@ import SwiftUI
 struct SettingsView: View {
     @EnvironmentObject var userPreferences: UserPreferences
     @EnvironmentObject var dataManager: DataManager
-    
-    @State private var difficulty: String
-    @State private var minDistance: Double
-    @State private var maxDistance: Double
-    @State private var elevation: String
-    @State private var helper: Bool
-    
-    init() {
-        let prefs = UserPreferences.load()
-        _difficulty = State(initialValue: String(prefs.difficulty))
-        _minDistance = State(initialValue: Double(prefs.minDistance))
-        _maxDistance = State(initialValue: Double(prefs.maxDistance))
-        _elevation = State(initialValue: String(prefs.elevation))
-        _helper = State(initialValue: Bool(prefs.helper))
-    }
+    @Environment(\.dismiss) var dismiss
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
-                Section(header: Text("Distance Preference")) {
-                    VStack(alignment: .leading) {
-                        Text("Minimum Distance: \(Double(minDistance))")
-                        Slider(value: $maxDistance, in: 0.5...50, step: 1)
+                Section(header: Text("Trail Preferences")) {
+                    Picker("Difficulty", selection: $userPreferences.trailPreferences.difficulty) {
+                        Text("Easy").tag("Easy")
+                        Text("Moderate").tag("Moderate")
+                        Text("Hard").tag("Hard")
+                        Text("Very Hard").tag("Very Hard")
                     }
                     
-                    VStack(alignment: .leading) {
-                        Text("Maximum Distance: \(Double(maxDistance))")
-                        Slider(value: $maxDistance, in: 0.5...50, step: 1)
+                    Picker("Elevation", selection: $userPreferences.trailPreferences.elevation) {
+                        Text("Low (0-500 ft)").tag("Low")
+                        Text("Moderate (500-1500 ft)").tag("Moderate")
+                        Text("High (1500+ ft)").tag("High")
                     }
                 }
                 
-//                Section(header: Text("Interests")) {
-//                    ForEach(availableInterests, id: \.self) { interest in
-//                        Button(action: {
-//                            if selectedInterests.contains(interest) {
-//                                selectedInterests.remove(interest)
-//                            } else {
-//                                selectedInterests.insert(interest)
-//                            }
-//                        }) {
-//                            HStack {
-//                                Text(interest)
-//                                    .foregroundColor(.primary)
-//                                Spacer()
-//                                if selectedInterests.contains(interest) {
-//                                    Image(systemName: "checkmark")
-//                                        .foregroundColor(.blue)
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-                
-//                Section(header: Text("Location")) {
-//                    TextField("Enter your location", text: $location)
-//                }
-                
-                Section {
-                    Button("Save Changes") {
-                        savePreferences()
+                Section(header: Text("Distance Preference")) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Minimum Distance: \(userPreferences.trailPreferences.minDistance, specifier: "%.1f") miles")
+                            .font(.subheadline)
+                        Slider(value: $userPreferences.trailPreferences.minDistance, in: 0...20, step: 0.5)
+                            .tint(.green)
                     }
-                    .frame(maxWidth: .infinity)
                     
-                    Button("Reset to Defaults", role: .destructive) {
-                        userPreferences.reset()
-                        loadCurrentPreferences()
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Maximum Distance: \(userPreferences.trailPreferences.maxDistance, specifier: "%.1f") miles")
+                            .font(.subheadline)
+                        Slider(value: $userPreferences.trailPreferences.maxDistance, in: 0...20, step: 0.5)
+                            .tint(.green)
                     }
+                }
+                
+                Section(header: Text("Training Goals")) {
+                    Picker("Current Capability", selection: $userPreferences.trailPreferences.currentCapability) {
+                        Text("0-2 miles").tag("0-2 miles")
+                        Text("2-4 miles").tag("2-4 miles")
+                        Text("4-6 miles").tag("4-6 miles")
+                        Text("6+ miles").tag("6+ miles")
+                    }
+                    
+                    Picker("Goal Distance", selection: $userPreferences.trailPreferences.desiredDistance) {
+                        Text("0-2 miles").tag("0-2 miles")
+                        Text("2-4 miles").tag("2-4 miles")
+                        Text("4-6 miles").tag("4-6 miles")
+                        Text("6+ miles").tag("6+ miles")
+                    }
+                    
+                    Picker("Hiking Frequency", selection: $userPreferences.trailPreferences.hikingFrequency) {
+                        Text("Never have").tag("Never have")
+                        Text("Once a year").tag("Once a year")
+                        Text("Every 6-12 months").tag("Every 6-12 months")
+                        Text("Every other month").tag("Every other month")
+                        Text("Every month").tag("Every month")
+                        Text("Almost weekly").tag("Almost weekly")
+                    }
+                }
+                
+                Section(header: Text("Assistance")) {
+                    Toggle("Helper Mode", isOn: $userPreferences.trailPreferences.helper)
+                    Text("Get detailed guidance and progressive training plans from the hiking assistant")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                Section(header: Text("Location")) {
+                    HStack {
+                        Text("Location")
+                        Spacer()
+                        if let location = userPreferences.trailPreferences.location {
+                            Text(location)
+                                .foregroundColor(.secondary)
+                        } else {
+                            Text("Not set")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    
+                    Picker("Travel Radius", selection: $userPreferences.trailPreferences.travelRadius) {
+                        Text("< 60 miles").tag("<60 miles")
+                        Text("60-100 miles").tag("60-100 miles")
+                        Text("100-125 miles").tag("100-125 miles")
+                        Text("125-250 miles").tag("125-250 miles")
+                        Text("250+ miles").tag("250+ miles")
+                    }
+                }
+                
+                Section(header: Text("Actions")) {
+                    Button("Reset to Defaults") {
+                        userPreferences.reset()
+                    }
+                    .foregroundColor(.red)
                 }
                 
                 Section(header: Text("Data")) {
@@ -79,6 +107,13 @@ struct SettingsView: View {
                         Text("Trails loaded")
                         Spacer()
                         Text("\(dataManager.allTrails.count)")
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    HStack {
+                        Text("Filtered trails")
+                        Spacer()
+                        Text("\(dataManager.filteredTrails.count)")
                             .foregroundColor(.secondary)
                     }
                     
@@ -94,40 +129,45 @@ struct SettingsView: View {
                     Button("Refresh Data") {
                         dataManager.refresh()
                     }
+                    .disabled(dataManager.isLoading)
+                    
+                    if dataManager.isLoading {
+                        HStack {
+                            ProgressView()
+                            Text("Loading...")
+                                .foregroundColor(.secondary)
+                        }
+                    }
                 }
             }
             .navigationTitle("Settings")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
         }
-        .onAppear {
-            loadCurrentPreferences()
-        }
-    }
-    
-    private func loadCurrentPreferences() {
-        let prefs = userPreferences.trailPreferences
-        difficulty = String(prefs.difficulty)
-        minDistance = Double(prefs.minDistance)
-        maxDistance = Double(prefs.maxDistance)
-        elevation = String(prefs.elevation)
-        helper = Bool(prefs.helper)
-    }
-    
-    private func savePreferences() {
-        let prefs = userPreferences.trailPreferences
-        difficulty = String(prefs.difficulty)
-        minDistance = Double(prefs.minDistance)
-        maxDistance = Double(prefs.maxDistance)
-        elevation = String(prefs.elevation)
-        helper = Bool(prefs.helper)
-        
-        userPreferences.trailPreferences = prefs
-        
-        // Filtered data automatically updates via computed property
-        // No need to reload the entire dataset!
     }
 }
+
 #Preview {
-    SettingsView()
-        .environmentObject(UserPreferences())
-        .environmentObject(DataManager(userPreferences: UserPreferences()))
+    let prefs = UserPreferences()
+    let dataManager = DataManager(userPreferences: prefs)
+    
+    // Set up some sample data for preview
+    prefs.trailPreferences.difficulty = "Moderate"
+    prefs.trailPreferences.minDistance = 2.0
+    prefs.trailPreferences.maxDistance = 8.0
+    prefs.trailPreferences.elevation = "Moderate"
+    prefs.trailPreferences.helper = true
+    prefs.trailPreferences.currentCapability = "2-4 miles"
+    prefs.trailPreferences.desiredDistance = "6+ miles"
+    prefs.trailPreferences.hikingFrequency = "Every month"
+    
+    return SettingsView()
+        .environmentObject(prefs)
+        .environmentObject(dataManager)
 }

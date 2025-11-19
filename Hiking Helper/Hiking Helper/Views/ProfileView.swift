@@ -11,159 +11,306 @@ struct ProfileView: View {
     @EnvironmentObject var dataManager: DataManager
     @EnvironmentObject var userPreferences: UserPreferences
     
-    @State var difficulty: String
-    @State var minDistance: Double
-    @State var maxDistance: Double
-    @State var elevation: String
-    @State var helper: Bool
-    
     @State private var filteredTrails: [Trail] = []
     @State private var navigateToHome = false
     @State private var navigateToSettings = false
-    @State private var preferences: [String: String] = ["Difficulty": "Easy", "Milage" : "4-6", "Helper" : "Active"]
-    
-
+    @State private var isCompletedExpanded = false  // For dropdown
     
     var body: some View {
-            VStack {
-                HStack {
-                    Button(action: {
-                        navigateToHome = true
-                    }){
-                        Image(systemName: "star.fill") // Your icon make into profile image
-                            .font(.title)
-                            .foregroundColor(.green)
-                            .padding(.leading, 10)
-                            .padding(.top, 10)
-                    }
-                    .navigationDestination(isPresented: $navigateToHome) {
-                        HomeView()
-                    }
-                    Spacer()
-                    Button(action: {
-                        navigateToSettings = true
-                    }){
-                        Image(systemName: "star.fill") // Your icon make into profile image
-                            .font(.title)
-                            .foregroundColor(.yellow)
-                            .padding(.leading, 10)
-                            .padding(.top, 10)
-                    }
-                    .navigationDestination(isPresented: $navigateToSettings) {
-                        SettingsView()
-                    }
+        VStack {
+            // Header buttons
+            HStack {
+                Button(action: {
+                    navigateToHome = true
+                }){
+                    Image(systemName: "house.fill")
+                        .font(.title)
+                        .foregroundColor(.green)
+                        .padding(.leading, 10)
+                        .padding(.top, 10)
                 }
-                
-                
-                VStack{
-                    Image(systemName:"person")   //user image
+                .navigationDestination(isPresented: $navigateToHome) {
+                    HomeView()
+                      .environmentObject(userPreferences)
+                      .environmentObject(dataManager)
+                }
+                Spacer()
+                Button(action: {
+                    navigateToSettings = true
+                }){
+                    Image(systemName: "gearshape.fill")
+                        .font(.title)
+                        .foregroundColor(.blue)
+                        .padding(.trailing, 10)
+                        .padding(.top, 10)
+                }
+                .sheet(isPresented: $navigateToSettings) {
+                    SettingsView()
+                        .environmentObject(userPreferences)
+                        .environmentObject(dataManager)
+                }
+            }
+            
+            ScrollView {
+                VStack(spacing: 20) {
+                    // Profile image and username
+                    Image(systemName: "person.circle.fill")
                         .resizable()
                         .aspectRatio(contentMode: .fill)
-                        .frame(width:225, height:225)
+                        .frame(width: 150, height: 150)
+                        .foregroundColor(.green)
                         .padding(.top, 20)
+                    
                     Text("Username1234")
                         .font(.largeTitle)
-
-                    //Information Stack
-                    VStack{
-                        HStack{
-                            Text("Trails Completed:")
-                                .padding(.leading, 20)
-                                .padding(.top, 10)
-                            Spacer()
-                            Text("number")
-                                .padding(.trailing, 20)
-                                .padding(.top, 10)
+                        .bold()
+                    
+                    // Stats Cards
+                    HStack(spacing: 15) {
+                        // Completed trails card
+                        StatCard(
+                            icon: "checkmark.circle.fill",
+                            value: "\(userPreferences.trailPreferences.completedTrails.count)",
+                            label: "Trails"
+                        )
+                        
+                        // Total miles card
+                        StatCard(
+                            icon: "figure.hiking",
+                            value: String(format: "%.1f", totalMilesHiked),
+                            label: "Miles"
+                        )
+                    }
+                    .padding(.horizontal)
+                    
+                    Divider()
+                        .padding(.horizontal, 20)
+                    
+                    // Completed Trails Dropdown
+                    VStack(spacing: 0) {
+                        // Dropdown header - TAP TO EXPAND
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                isCompletedExpanded.toggle()
+                            }
+                        } label: {
+                            HStack {
+                                Image(systemName: "trophy.fill")
+                                    .foregroundColor(.yellow)
+                                Text("Completed Trails")
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
+                                Spacer()
+                                Text("\(userPreferences.trailPreferences.completedTrails.count)")
+                                    .foregroundColor(.secondary)
+                                Image(systemName: isCompletedExpanded ? "chevron.up" : "chevron.down")
+                                    .foregroundColor(.gray)
+                            }
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .cornerRadius(10)
+                            .contentShape(Rectangle())  // ← Makes entire area tappable
                         }
-                        HStack{
-                            Text("Miles:")
-                                .padding(.leading, 20)
-                                .padding(.top, 10)
-                            Spacer()
-                            Text("number")
-                                .padding(.trailing, 20)
-                                .padding(.top, 10)
+                        .buttonStyle(.plain)  // ← IMPORTANT: Makes button work properly
+                        
+                        // Dropdown content - SHOWS WHEN EXPANDED
+                        if isCompletedExpanded {
+                            VStack(spacing: 0) {
+                                if completedTrailDetails.isEmpty {
+                                    Text("No trails completed yet")
+                                        .foregroundColor(.secondary)
+                                        .padding()
+                                        .frame(maxWidth: .infinity)
+                                } else {
+                                    ForEach(completedTrailDetails, id: \.id) { trail in
+                                        HStack {
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                Text(trail.trailName)
+                                                    .font(.subheadline)
+                                                    .fontWeight(.medium)
+                                                Text("\(trail.distanceMiles, specifier: "%.1f") miles")
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                            }
+                                            Spacer()
+                                            Image(systemName: "checkmark.circle.fill")
+                                                .foregroundColor(.green)
+                                        }
+                                        .padding()
+                                        
+                                        if trail.id != completedTrailDetails.last?.id {
+                                            Divider()
+                                                .padding(.leading)
+                                        }
+                                    }
+                                }
+                            }
+                            .background(Color(.systemGray6).opacity(0.5))
+                            .cornerRadius(10)
+                            .padding(.top, 4)
                         }
                     }
+                    .padding(.horizontal)
                     
-                    //Filtered Trails stack based on preferences
-                    VStack{
+                    Divider()
+                        .padding(.horizontal, 20)
+                    
+                    // Preferences section
+                    VStack(spacing: 10) {
                         Text("Preferences")
                             .font(.headline)
                         
-                        ForEach(preferences.sorted(by: <), id: \.key) { key, value in
-                            HStack{
-                                Text("\(key)")
+                        VStack(spacing: 8) {
+                            PreferenceRow(
+                                label: "Trail Difficulty:",
+                                value: userPreferences.trailPreferences.difficulty
+                            )
+                            
+                            PreferenceRow(
+                                label: "Current Capability:",
+                                value: userPreferences.trailPreferences.currentCapability
+                            )
+                            
+                            PreferenceRow(
+                                label: "Goal Distance:",
+                                value: userPreferences.trailPreferences.desiredDistance
+                            )
+                            
+                            PreferenceRow(
+                                label: "Elevation Preference:",
+                                value: userPreferences.trailPreferences.elevation
+                            )
+                            
+                            PreferenceRow(
+                                label: "Distance Range:",
+                                value: String(format: "%.1f - %.1f miles",
+                                            userPreferences.trailPreferences.minDistance,
+                                            userPreferences.trailPreferences.maxDistance)
+                            )
+                            
+                            HStack {
+                                Text("Helper Mode:")
                                     .padding(.leading, 20)
                                     .padding(.top, 10)
-                                Text("\(value)")
+                                Spacer()
+                                Text(userPreferences.trailPreferences.helper ? "Activated" : "Deactivated")
                                     .padding(.trailing, 20)
                                     .padding(.top, 10)
-
-
+                                    .bold()
+                                    .foregroundColor(userPreferences.trailPreferences.helper ? .green : .gray)
                             }
                         }
-//                        List(filteredTrails) { trail in
-//                            Text(trail.name)
-//                                .font(.headline)
-//                            Text("Difficulty: \(trail.difficulty)")
-//                            Text("Distance: \(trail.distanceTravel)")
-//                        }
+                        
+                        // Edit button
+                        Button(action: {
+                            navigateToSettings = true
+                        }) {
+                            HStack {
+                                Image(systemName: "pencil")
+                                Text("Edit Preferences")
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.green)
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.top, 10)
                     }
-                    .padding()
-//                    .onAppear(perform: filterTrails)
-                    
                 }
-
-            }
-            
-            
-            .frame(maxHeight: .infinity, alignment: .top)
-            .padding()
-            .onAppear(){
-                loadCurrentPreferences()
+                .padding(.bottom, 20)
             }
         }
-
-    private func loadCurrentPreferences() {
-        let prefs = userPreferences.trailPreferences
-        difficulty = String(prefs.difficulty)
-        minDistance = Double(prefs.minDistance)
-        maxDistance = Double(prefs.maxDistance)
-        elevation = String(prefs.elevation)
-        helper = Bool(prefs.helper)
+        .navigationBarBackButtonHidden(true)
+        .onAppear {
+            // Temporary test - add some completed trails
+            if userPreferences.trailPreferences.completedTrails.isEmpty {
+                userPreferences.trailPreferences.completedTrails = [1001, 1002, 1003]
+            }
+            
+            if !userPreferences.needsOnboarding {
+                dataManager.loadTrailsIfNeeded()
+            }
+        }
     }
-
     
-//    func filterTrails() {
-//        let answers = QuestionnaireManager.loadAnswers()
-//        let preferredDifficulty = answers["Which difficulty level do you prefer?"]
-//        
-//        let ableDistance = answers["How far do you think you can hike right now?"]
-//        
-//        if let pref = preferredDifficulty{
-//            filteredTrails = allTrails.filter { $0.difficulty == pref}
-//        } else {
-//            filteredTrails = allTrails
-//        }
-//        
-//        if let pref = ableDistance{
-//            filteredTrails = allTrails.filter {$0.distanceTravel == pref}
-//        } else {
-//            filteredTrails = allTrails
-//        }
-//    }
-
+    // Computed property to get total miles hiked
+    private var totalMilesHiked: Double {
+        completedTrailDetails.reduce(0) { $0 + $1.distanceMiles }
+    }
+    
+    // Computed property to get completed trail details from IDs
+    private var completedTrailDetails: [Trail] {
+        let completedIds = userPreferences.trailPreferences.completedTrails
+        return dataManager.allTrails.filter { completedIds.contains($0.id) }
+    }
+    
 }
 
+// MARK: - Stat Card View
+struct StatCard: View {
+    let icon: String
+    let value: String
+    let label: String
+    
+    var body: some View {
+        VStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.title)
+                .foregroundColor(.green)
+            
+            Text(value)
+                .font(.title2)
+                .bold()
+            
+            Text(label)
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(12)
+    }
+}
 
+// MARK: - Preference Row View
+struct PreferenceRow: View {
+    let label: String
+    let value: String
+    
+    var body: some View {
+        HStack {
+            Text(label)
+                .padding(.leading, 20)
+                .padding(.top, 10)
+            Spacer()
+            Text(value)
+                .padding(.trailing, 20)
+                .padding(.top, 10)
+                .bold()
+        }
+    }
+}
 
 #Preview("Profile") {
     let prefs = UserPreferences()
     let dataManager = DataManager(userPreferences: prefs)
-    dataManager.userPreferences = prefs
     
-    return ProfileView()
-        .environmentObject(prefs)
-        .environmentObject(dataManager)
+    // Set up some sample preferences for preview
+    prefs.trailPreferences.difficulty = "Moderate"
+    prefs.trailPreferences.minDistance = 2.0
+    prefs.trailPreferences.maxDistance = 5.0
+    prefs.trailPreferences.elevation = "Moderate"
+    prefs.trailPreferences.helper = true
+    prefs.trailPreferences.currentCapability = "2-4 miles"
+    prefs.trailPreferences.desiredDistance = "6+ miles"
+    prefs.trailPreferences.completedTrails = [1001, 1002, 1003]  // Sample completed trail IDs
+    
+    return NavigationStack {
+        ProfileView()
+            .environmentObject(prefs)
+            .environmentObject(dataManager)
+    }
 }

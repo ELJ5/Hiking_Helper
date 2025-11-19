@@ -1,15 +1,16 @@
 import Foundation
 
 struct Trail: Identifiable, Codable {
-    let id: UUID
+    let id: Int
     let trailName: String
     let state: String
-    let latitude: Float
-    let longitude: Float
+    let latitude: Double
+    let longitude: Double
     let distanceMiles: Double
-    let elevationGainFeet: Float
+    let elevationGainFeet: Double
     let difficultyLevel: String
-    let terrainTypes: String
+    let terrainTypes: [String]
     let description: String
-    let userRating: Float
+    let userRating: Double
+    let completed: Bool
 }
