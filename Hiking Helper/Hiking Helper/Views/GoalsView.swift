@@ -82,7 +82,7 @@ struct GoalsView: View {
             
             // Goals List
             if dataManager.isLoading {
-                LoadingView()
+                GoalsLoadingView()
             } else if let error = dataManager.errorMessage {
                 ErrorView(message: error) {
                     generateGoals()
@@ -407,7 +407,7 @@ struct EmptyGoalsView: View {
 
 // MARK: - Loading View
 
-struct LoadingView: View {
+struct GoalsLoadingView: View {
     var body: some View {
         VStack(spacing: 16) {
             ProgressView()

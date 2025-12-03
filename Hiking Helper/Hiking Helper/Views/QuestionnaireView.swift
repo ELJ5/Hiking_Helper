@@ -6,8 +6,7 @@ struct QuestionnaireView: View {
     @EnvironmentObject var dataManager: DataManager
     
     @State private var questions: [Question] = []
-    @State private var showResults = false
-    @State private var navigateToResults = false
+    @State private var showResults = false  // Can remove this too if not used
     @State private var navigateToStateSelection = false
     @State private var currentQuestion = 0
     @FocusState private var isTextFieldFocused: Bool
@@ -125,9 +124,7 @@ struct QuestionnaireView: View {
             }
             .padding()
             .onAppear(perform: loadQuestions)
-            .navigationDestination(isPresented: $navigateToResults) {
-                HomeView()
-            }
+            // REMOVED: .navigationDestination(isPresented: $navigateToResults)
             .navigationDestination(isPresented: $navigateToStateSelection) {
                 StateSelectionView(isOnboarding: true) {
                     // Called when user completes state selection
@@ -208,12 +205,6 @@ struct QuestionnaireView: View {
                 ),
                 
                 Question(
-                    text: "How far are you willing to travel for a trail?",
-                    options: ["<60 miles", "60-100 miles", "100-125 miles", "125-250 miles", "250+ miles"],
-                    preferenceKey: "travelRadius"
-                ),
-                
-                Question(
                     text: "Ready to start your hiking journey?",
                     options: ["Yes, let's go!", "Can't wait!"],
                     preferenceKey: "completion"
@@ -249,7 +240,7 @@ struct QuestionnaireView: View {
         // Update user preferences
         updateUserPreferences()
         
-        // Mark onboarding as complete
+        // Mark onboarding as complete - THIS will make needsOnboarding return false
         var prefs = userPreferences.trailPreferences
         prefs.hasCompletedOnboarding = true
         userPreferences.trailPreferences = prefs
@@ -257,11 +248,9 @@ struct QuestionnaireView: View {
         // Load hiking data for selected states
         dataManager.loadTrailsIfNeeded()
         
-        // Navigate to home
-        navigateToResults = true
-        
         print("✅ Preferences saved: \(userPreferences.trailPreferences)")
         print("✅ Selected states: \(userPreferences.trailPreferences.selectedStates)")
+        print("✅ Onboarding complete: \(userPreferences.trailPreferences.hasCompletedOnboarding)")
     }
     
     func updateUserPreferences() {

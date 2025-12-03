@@ -1,6 +1,6 @@
 import Foundation
 
-struct Trail: Identifiable, Codable {
+struct Trail: Identifiable, Codable, Hashable {
     let id: Int
     let trailName: String
     let state: String

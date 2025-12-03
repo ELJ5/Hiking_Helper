@@ -7,22 +7,19 @@ struct ContentView: View {
     var body: some View {
         Group {
             if userPreferences.needsOnboarding {
-                QuestionnaireView()
+                NavigationStack{
+                    QuestionnaireView()
+                        .navigationBarBackButtonHidden(true)
+
+                }
             } else {
-                HomeView()
-                    .environmentObject(userPreferences)
-                    .environmentObject(dataManager)
+                NavigationStack{
+                    HomeView()
+                        .environmentObject(userPreferences)
+                        .environmentObject(dataManager)
+                        .navigationBarBackButtonHidden(true)
+                }
             }
         }
     }
 }
-
-//#Preview {
-//    let prefs = UserPreferences()
-//    let manager = DataManager()
-//    manager.userPreferences = prefs
-//    
-//    return ContentView()
-//        .environmentObject(prefs)
-//        .environmentObject(manager)
-//}

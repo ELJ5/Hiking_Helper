@@ -1,68 +1,272 @@
+//import Foundation
+//import OpenAI
 //
-//  OpenAIService.swift
-//  Hiking Helper
+//class OpenAIService {
+//    private let client: OpenAI
+//    
+//    init() {
+//        self.client = OpenAI(apiToken: Config.openAIKey)
+//    }
+//    
+//    // MARK: - Generate Personalized Goals
+//    
+//    func generatePersonalizedGoals(userPreferences: UserPreferences) async throws -> [HikingGoal] {
+//        let prompt = buildGoalGenerationPrompt(from: userPreferences)
+//        
+//        let query = ChatQuery(
+//            messages: [
+//                .init(role: .system, content: """
+//                You are a professional hiking coach and goal-setting expert. Generate personalized,
+//                achievable hiking goals based on the user's current capabilities and preferences.
+//                Return goals in JSON format as an array of objects with: title, description, category,
+//                targetDate, and isCompleted fields.
+//                """),
+//                .init(role: .user, content: prompt)
+//            ],
+//            model: .gpt4_o,
+//            responseFormat: .init(type: .jsonObject)
+//        )
+//        
+//        let result = try await client.chats(query: query)
+//        
+//        guard let content = result.choices.first?.message.content?.string else {
+//            throw OpenAIError.noResponse
+//        }
+//        
+//        return try parseGoalsFromJSON(content)
+//    }
+//    
+//    private func buildGoalGenerationPrompt(from prefs: UserPreferences) -> String {
+//        let trailPrefs = prefs.trailPreferences
+//        
+//        return """
+//        Generate 5-7 personalized hiking goals for a user with these characteristics:
+//        
+//        Current Capabilities:
+//        - Preferred difficulty: \(trailPrefs.difficulty)
+//        - Distance range: \(trailPrefs.minDistance) - \(trailPrefs.maxDistance) miles
+//        - Elevation preference: \(trailPrefs.elevation)
+//        - States interested in: \(trailPrefs.selectedStates.joined(separator: ", "))
+//        - Completed trails: \(trailPrefs.completedTrails.count)
+//        
+//        Create a mix of:
+//        - Skill Development goals (improve endurance, tackle harder terrain)
+//        - Exploration goals (visit new states/trails)
+//        - Milestone goals (distance/elevation achievements)
+//        - Community goals (if applicable)
+//        
+//        Make goals SMART (Specific, Measurable, Achievable, Relevant, Time-bound).
+//        Goals should progressively challenge the user while being realistic.
+//        
+//        Return ONLY valid JSON in this exact format:
+//        {
+//            "goals": [
+//                {
+//                    "title": "Complete a 10-mile hike",
+//                    "description": "Build endurance by completing a single hike of 10 miles",
+//                    "category": "Skill Development",
+//                    "targetDate": "2024-03-01",
+//                    "isCompleted": false
+//                }
+//            ]
+//        }
+//        """
+//    }
+//    
+//    private func parseGoalsFromJSON(_ json: String) throws -> [HikingGoal] {
+//        struct GoalResponse: Codable {
+//            let goals: [GoalData]
+//        }
+//        
+//        struct GoalData: Codable {
+//            let title: String
+//            let description: String
+//            let category: String
+//            let targetDate: String
+//            let isCompleted: Bool
+//        }
+//        
+//        let data = Data(json.utf8)
+//        let response = try JSONDecoder().decode(GoalResponse.self, from: data)
+//        
+//        let dateFormatter = DateFormatter()
+//        dateFormatter.dateFormat = "yyyy-MM-dd"
+//        
+//        return response.goals.compactMap { goalData in
+//            guard let category = HikingGoal.GoalCategory(rawValue: goalData.category),
+//                  let date = dateFormatter.date(from: goalData.targetDate) else {
+//                return nil
+//            }
+//            
+//            return HikingGoal(
+//                title: goalData.title,
+//                description: goalData.description,
+//                category: category,
+//                targetDate: date,
+//                isCompleted: goalData.isCompleted
+//            )
+//        }
+//    }
+//    
+//    // MARK: - Hiking Chatbot
+//    
+//    func askHikingQuestion(_ question: String, conversationHistory: [ChatMessage] = []) async throws -> String {
+//        var messages: [Chat] = [
+//            .init(role: .system, content: """
+//            You are an expert hiking assistant with deep knowledge of:
+//            - Trail recommendations and planning
+//            - Hiking safety and preparation
+//            - Gear and equipment advice
+//            - Weather and seasonal considerations
+//            - Fitness and training for hiking
+//            - Leave No Trace principles
+//            - Wildlife safety
+//            - Navigation and orienteering
+//            
+//            Provide helpful, accurate, and safe advice. Be concise but thorough.
+//            If a question is dangerous or unsafe, explain why and provide safer alternatives.
+//            """)
+//        ]
+//        
+//        // Add conversation history
+//        messages.append(contentsOf: conversationHistory)
+//        
+//        // Add current question
+//        messages.append(.init(role: .user, content: question))
+//        
+//        let query = ChatQuery(
+//            messages: messages,
+//            model: .gpt4_o,
+//            temperature: 0.7
+//        )
+//        
+//        let result = try await client.chats(query: query)
+//        
+//        guard let content = result.choices.first?.message.content?.string else {
+//            throw OpenAIError.noResponse
+//        }
+//        
+//        return content
+//    }
+//    
+//    // MARK: - Personalized Trail Recommendations
+//    
+//    func getTrailRecommendations(userPreferences: UserPreferences, availableTrails: [Trail]) async throws -> String {
+//        let prompt = """
+//        Based on this user's preferences:
+//        - Difficulty: \(userPreferences.trailPreferences.difficulty)
+//        - Distance: \(userPreferences.trailPreferences.minDistance)-\(userPreferences.trailPreferences.maxDistance) miles
+//        - Elevation: \(userPreferences.trailPreferences.elevation)
+//        
+//        Here are some trails in their area:
+//        \(availableTrails.prefix(10).map { "- \($0.trailName): \($0.distanceMiles) mi, \($0.difficultyLevel)" }.joined(separator: "\n"))
+//        
+//        Recommend the top 3 trails and explain why they're good matches.
+//        """
+//        
+//        return try await askHikingQuestion(prompt)
+//    }
+//}
 //
-//  Created by Eliana Johnson on 11/13/25.
+//enum OpenAIError: Error {
+//    case noResponse
+//    case invalidJSON
+//}
 //
+//// Helper for conversation history
+//struct ChatMessage: Codable {
+//    let role: String
+//    let content: String
+//}
+
 
 import Foundation
 
-// MARK: - OpenAI Service (Updated with Secure Config)
 class OpenAIService {
     private let apiKey: String
-    private let endpoint = "https://api.openai.com/v1/chat/completions"
+    private let baseURL = "https://api.openai.com/v1"
     
     init() {
-        // Use the secure configuration
         self.apiKey = APIConfig.openAIKey
-        
-        if apiKey.isEmpty {
-            print("⚠️ ERROR: OpenAI API key not configured!")
-            print("Please see APIConfig.swift for setup instructions")
-        }
     }
     
-    func sendChatMessage(messages: [ChatMessage], userPreferences: UserPreferences) async throws -> String {
-        guard !apiKey.isEmpty else {
-            throw OpenAIError.missingAPIKey
-        }
-        
-        let systemPrompt = createSystemPrompt(from: userPreferences)
-        
-        // Convert messages to OpenAI format
-        var apiMessages: [[String: String]] = [
-            ["role": "system", "content": systemPrompt]
-        ]
-        
-        // Add conversation history (limit to last 10 messages to save tokens)
-        let recentMessages = messages.suffix(10)
-        for message in recentMessages {
-            apiMessages.append([
-                "role": message.role.rawValue,
-                "content": message.content
-            ])
-        }
+    // MARK: - Generate Personalized Goals
+    
+    func generatePersonalizedGoals(userPreferences: UserPreferences, timeframe: GoalTimeframe) async throws -> [Goal] {
+        let prompt = buildGoalGenerationPrompt(from: userPreferences, timeframe: timeframe)
         
         let requestBody: [String: Any] = [
-            "model": "gpt-4o-mini", // More cost-effective model
-            "messages": apiMessages,
-            "temperature": 0.7,
-            "max_tokens": 500,
-            "top_p": 1.0,
-            "frequency_penalty": 0.0,
-            "presence_penalty": 0.0
+            "model": "gpt-4o",
+            "messages": [
+                [
+                    "role": "system",
+                    "content": """
+                    You are a professional hiking coach and goal-setting expert. Generate personalized,
+                    achievable hiking goals based on the user's current capabilities and preferences.
+                    Return ONLY valid JSON.
+                    """
+                ],
+                [
+                    "role": "user",
+                    "content": prompt
+                ]
+            ],
+            "response_format": ["type": "json_object"],
+            "temperature": 0.7
         ]
         
-        guard let url = URL(string: endpoint) else {
+        let response = try await makeRequest(endpoint: "/chat/completions", body: requestBody)
+        return try parseGoalsFromResponse(response, timeframe: timeframe)
+    }
+    
+    // MARK: - Hiking Chatbot
+    
+    func askHikingQuestion(_ question: String, conversationHistory: [[String: String]] = []) async throws -> String {
+        var messages: [[String: String]] = [
+            [
+                "role": "system",
+                "content": """
+                You are an expert hiking assistant. Provide helpful, accurate, and safe hiking advice.
+                Topics include: trail recommendations, safety, gear, weather, fitness, navigation, and wildlife.
+                Be concise but thorough. If something is unsafe, explain why and provide safer alternatives.
+                """
+            ]
+        ]
+        
+        messages.append(contentsOf: conversationHistory)
+        messages.append(["role": "user", "content": question])
+        
+        let requestBody: [String: Any] = [
+            "model": "gpt-4o",
+            "messages": messages,
+            "temperature": 0.7,
+            "max_tokens": 500
+        ]
+        
+        let response = try await makeRequest(endpoint: "/chat/completions", body: requestBody)
+        
+        guard let choices = response["choices"] as? [[String: Any]],
+              let firstChoice = choices.first,
+              let message = firstChoice["message"] as? [String: Any],
+              let content = message["content"] as? String else {
+            throw OpenAIError.invalidResponse
+        }
+        
+        return content
+    }
+    
+    // MARK: - Private Helpers
+    
+    private func makeRequest(endpoint: String, body: [String: Any]) async throws -> [String: Any] {
+        guard let url = URL(string: baseURL + endpoint) else {
             throw OpenAIError.invalidURL
         }
         
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
-        request.timeoutInterval = 30
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
         
         let (data, response) = try await URLSession.shared.data(for: request)
         
@@ -70,227 +274,124 @@ class OpenAIService {
             throw OpenAIError.invalidResponse
         }
         
-        // Handle different HTTP status codes
-        switch httpResponse.statusCode {
-        case 200:
-            break
-        case 401:
-            throw OpenAIError.authenticationError
-        case 429:
-            throw OpenAIError.rateLimitError
-        case 500...599:
-            throw OpenAIError.serverError
-        default:
-            throw OpenAIError.httpError(statusCode: httpResponse.statusCode)
-        }
-        
-        // Parse the response
-        let openAIResponse = try JSONDecoder().decode(OpenAIResponse.self, from: data)
-        
-        guard let messageContent = openAIResponse.choices.first?.message.content else {
-            throw OpenAIError.noContent
-        }
-        
-        return messageContent
-    }
-    
-    private func createSystemPrompt(from userPreferences: UserPreferences) -> String {
-        let prefs = userPreferences.trailPreferences
-        
-        var prompt = """
-        You are a knowledgeable and encouraging hiking assistant specializing in trail recommendations and training plans.
-        Your role is to help users find suitable trails, create progressive training plans, and achieve their hiking goals.
-        
-        Be:
-        - Friendly and supportive
-        - Specific in recommendations
-        - Safety-conscious
-        - Encouraging but realistic
-        
-        User Profile:
-        """
-        
-        // Add user's hiking experience
-        if !prefs.hikingFrequency.isEmpty {
-            prompt += "\n- Hiking frequency: \(prefs.hikingFrequency)"
-        }
-        
-        // Add current capability
-        if !prefs.currentCapability.isEmpty {
-            prompt += "\n- Current comfortable distance: \(prefs.currentCapability)"
-        }
-        
-        // Add desired distance
-        if !prefs.desiredDistance.isEmpty {
-            prompt += "\n- Goal distance: \(prefs.desiredDistance)"
-            
-            // Calculate if they need progression
-            if prefs.currentCapability != prefs.desiredDistance {
-                prompt += " (wants to progress from current level)"
+        guard httpResponse.statusCode == 200 else {
+            if let errorDict = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let error = errorDict["error"] as? [String: Any],
+               let message = error["message"] as? String {
+                throw OpenAIError.apiError(message)
             }
+            throw OpenAIError.httpError(httpResponse.statusCode)
         }
         
-        // Add difficulty preference
-        if !prefs.difficulty.isEmpty {
-            prompt += "\n- Preferred difficulty: \(prefs.difficulty)"
+        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            throw OpenAIError.invalidResponse
         }
         
-        // Add elevation preference
-        if !prefs.elevation.isEmpty {
-            prompt += "\n- Preferred elevation gain: \(prefs.elevation)"
+        return json
+    }
+    
+    private func buildGoalGenerationPrompt(from prefs: UserPreferences, timeframe: GoalTimeframe) -> String {
+        let trailPrefs = prefs.trailPreferences
+        
+        return """
+        Generate 6-8 personalized hiking goals for a user with these characteristics:
+        
+        Profile:
+        - Current Capability: \(trailPrefs.currentCapability)
+        - Goal Distance: \(trailPrefs.desiredDistance)
+        - Preferred Difficulty: \(trailPrefs.difficulty)
+        - Elevation Preference: \(trailPrefs.elevation)
+        - Hiking Frequency: \(trailPrefs.hikingFrequency)
+        - States Interested: \(trailPrefs.selectedStates.joined(separator: ", "))
+        - Completed Trails: \(trailPrefs.completedTrails.count)
+        
+        Timeframe: \(timeframe.rawValue)
+        
+        Create a balanced mix across these categories:
+        - Endurance (build stamina)
+        - Elevation (tackle elevation gain)
+        - Distance (increase mileage)
+        - Frequency (regular hiking habit)
+        - Exploration (discover new trails/states)
+        - Skills & Safety (improve hiking knowledge)
+        
+        Make goals SMART and progressively challenging but achievable.
+        Vary difficulty: some easy wins, mostly moderate, few challenging.
+        
+        Return ONLY valid JSON in this EXACT format:
+        {
+            "goals": [
+                {
+                    "title": "Complete a 10-mile hike",
+                    "description": "Build endurance by completing a single hike of 10 miles",
+                    "category": "Endurance",
+                    "difficulty": "Moderate"
+                }
+            ]
         }
         
-        // Add location
-        if let location = prefs.location {
-            prompt += "\n- Location: \(location)"
-        }
-        
-        // Add travel radius
-        if !prefs.travelRadius.isEmpty {
-            prompt += "\n- Willing to travel: \(prefs.travelRadius)"
-        }
-        
-        // Add helper mode context
-        if prefs.helper {
-            prompt += """
-            
-            
-            IMPORTANT: This user wants detailed guidance and support.
-            Provide:
-            - Progressive training suggestions with specific weekly plans
-            - Safety tips appropriate for their level
-            - Encouragement and milestone celebrations
-            - Step-by-step explanations
-            - Preparation checklists when suggesting new trails
-            """
-        } else {
-            prompt += """
-            
-            
-            This user is experienced and wants concise recommendations without excessive guidance.
-            """
-        }
-        
-        prompt += """
-        
-        
-        GUIDELINES FOR RESPONSES:
-        
-        Trail Recommendations:
-        • Match their stated preferences (difficulty, distance, elevation)
-        • If suggesting progression, ensure it's gradual (10-20% increase max)
-        • Include: trail name, distance, elevation gain, difficulty rating
-        • Mention key features: views, water sources, terrain, crowds, best season
-        • Provide practical details: parking, permits, cell service
-        
-        Training Plans:
-        • Start from their current capability
-        • Progress gradually with specific weekly goals
-        • Include rest days (at least 1-2 per week)
-        • Add cross-training suggestions (strength, flexibility)
-        • Set realistic timeframes (e.g., "12 weeks to go from 2 miles to 6 miles")
-        • Emphasize injury prevention and listening to their body
-        
-        General Advice:
-        • Gear: Only suggest essentials for their level
-        • Safety: Always mention water, sun protection, navigation, and telling someone their plans
-        • Weather: Remind them to check conditions before hiking
-        • Fitness: Cardio + leg strength + core stability
-        
-        Keep responses conversational but informative. Use bullet points for lists. Be encouraging!
+        Categories MUST be: "Endurance", "Elevation", "Distance", "Frequency", "Exploration", or "Skills & Safety"
+        Difficulty MUST be: "Easy", "Moderate", or "Challenging"
         """
-        
-        return prompt
     }
     
-}
-
-// MARK: - OpenAI Response Models
-struct OpenAIResponse: Codable {
-    let id: String
-    let object: String
-    let created: Int
-    let model: String
-    let choices: [Choice]
-    let usage: Usage?
-    
-    struct Choice: Codable {
-        let index: Int
-        let message: Message
-        let finishReason: String?
-        
-        enum CodingKeys: String, CodingKey {
-            case index
-            case message
-            case finishReason = "finish_reason"
+    private func parseGoalsFromResponse(_ response: [String: Any], timeframe: GoalTimeframe) throws -> [Goal] {
+        guard let choices = response["choices"] as? [[String: Any]],
+              let firstChoice = choices.first,
+              let message = firstChoice["message"] as? [String: Any],
+              let content = message["content"] as? String else {
+            throw OpenAIError.invalidResponse
         }
         
-        struct Message: Codable {
-            let role: String
-            let content: String
+        struct GoalResponse: Codable {
+            let goals: [GoalData]
         }
-    }
-    
-    struct Usage: Codable {
-        let promptTokens: Int
-        let completionTokens: Int
-        let totalTokens: Int
         
-        enum CodingKeys: String, CodingKey {
-            case promptTokens = "prompt_tokens"
-            case completionTokens = "completion_tokens"
-            case totalTokens = "total_tokens"
+        struct GoalData: Codable {
+            let title: String
+            let description: String
+            let category: String
+            let difficulty: String
+        }
+        
+        let data = Data(content.utf8)
+        let goalResponse = try JSONDecoder().decode(GoalResponse.self, from: data)
+        
+        return goalResponse.goals.compactMap { goalData in
+            guard let category = GoalCategory.allCases.first(where: { $0.rawValue == goalData.category }),
+                  let difficulty = GoalDifficulty.allCases.first(where: { $0.rawValue == goalData.difficulty }) else {
+                return nil
+            }
+            
+            return Goal(
+                title: goalData.title,
+                description: goalData.description,
+                category: category,
+                timeframe: timeframe,
+                difficulty: difficulty
+            )
         }
     }
 }
 
 // MARK: - Errors
+
 enum OpenAIError: LocalizedError {
     case invalidURL
     case invalidResponse
-    case httpError(statusCode: Int)
-    case noContent
-    case networkError(Error)
-    case authenticationError
-    case rateLimitError
-    case serverError
-    case missingAPIKey
+    case apiError(String)
+    case httpError(Int)
     
     var errorDescription: String? {
         switch self {
         case .invalidURL:
-            return "Invalid URL configuration"
+            return "Invalid API URL"
         case .invalidResponse:
-            return "Invalid response from server"
-        case .httpError(let statusCode):
-            return "Server error: \(statusCode)"
-        case .noContent:
-            return "No content in response"
-        case .networkError(let error):
-            return "Network error: \(error.localizedDescription)"
-        case .authenticationError:
-            return "Authentication failed. Please check your API key."
-        case .rateLimitError:
-            return "Rate limit exceeded. Please try again later."
-        case .serverError:
-            return "OpenAI server error. Please try again."
-        case .missingAPIKey:
-            return "OpenAI API key not configured. Please see APIConfig.swift for setup instructions."
-        }
-    }
-    
-    var recoverySuggestion: String? {
-        switch self {
-        case .authenticationError:
-            return "Verify your OpenAI API key is correct"
-        case .rateLimitError:
-            return "Wait a few minutes before trying again"
-        case .serverError:
-            return "Check OpenAI status at status.openai.com"
-        case .missingAPIKey:
-            return "Configure your API key using one of the methods in APIConfig.swift"
-        default:
-            return nil
+            return "Invalid response from OpenAI"
+        case .apiError(let message):
+            return "OpenAI Error: \(message)"
+        case .httpError(let code):
+            return "HTTP Error: \(code)"
         }
     }
 }

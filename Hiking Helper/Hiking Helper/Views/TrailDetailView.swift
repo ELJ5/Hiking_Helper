@@ -10,10 +10,14 @@ import MapKit
 
 struct TrailDetailView: View {
     @EnvironmentObject var userPreferences: UserPreferences
+    @EnvironmentObject var dataManager: DataManager
+
     let trail: Trail
     
     @State private var cameraPosition: MapCameraPosition
     @Environment(\.dismiss) var dismiss
+    
+    @State private var navigateToHome = false
     
     init(trail: Trail) {
         self.trail = trail
@@ -29,6 +33,26 @@ struct TrailDetailView: View {
     
     var body: some View {
         ScrollView {
+//            HStack{
+//                Button(action: {
+//                    navigateToHome = true
+//                }){
+//                    Image(systemName: "house.fill")
+//                        .font(.title)
+//                        .foregroundColor(.green)
+//                        .padding(.leading, 10)
+//                        .padding(.top, 10)
+//                }
+//                .navigationDestination(isPresented: $navigateToHome) {
+//                    HomeView()
+//                      .environmentObject(userPreferences)
+//                      .environmentObject(dataManager)
+//                      .transition(
+//                          .move(edge: .leading)
+//                          .combined(with: .opacity)
+//                      )
+//                }
+//            }
             VStack(spacing: 0) {
                 // Map Header
                 ZStack(alignment: .topTrailing) {
@@ -37,7 +61,7 @@ struct TrailDetailView: View {
                             latitude: trail.latitude,
                             longitude: trail.longitude
                         ))
-                        .tint(.green)
+                        .tint(.primaryGreen)
                     }
                     .frame(height: 250)
                     .allowsHitTesting(false)
@@ -53,7 +77,7 @@ struct TrailDetailView: View {
                         .foregroundColor(.white)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
-                        .background(Color.green)
+                        .background(Color.primaryGreen)
                         .cornerRadius(20)
                         .padding(12)
                     }
@@ -78,8 +102,8 @@ struct TrailDetailView: View {
                     
                     // Quick Stats
                     HStack(spacing: 20) {
-                        StatBox(icon: "figure.walk", value: String(format: "%.1f", trail.distanceMiles), label: "Miles", color: .blue)
-                        StatBox(icon: "arrow.up.right", value: "\(Int(trail.elevationGainFeet))", label: "Elevation (ft)", color: .orange)
+                        StatBox(icon: "figure.walk", value: String(format: "%.1f", trail.distanceMiles), label: "Miles", color: .primaryBlue)
+                        StatBox(icon: "arrow.up.right", value: "\(Int(trail.elevationGainFeet))", label: "Elevation (ft)", color: .lightBlue)
                         StatBox(icon: "gauge.medium", value: trail.difficultyLevel, label: "Difficulty", color: difficultyColor)
                     }
                     
@@ -165,7 +189,7 @@ struct TrailDetailView: View {
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(isCompleted ? Color.orange : Color.green)
+                            .background(isCompleted ? Color.darkBlue : Color.primaryGreen)
                             .cornerRadius(12)
                         }
                         
@@ -178,10 +202,10 @@ struct TrailDetailView: View {
                                 Text("Get Directions")
                             }
                             .font(.headline)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.primaryBlue)
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(Color.blue.opacity(0.1))
+                            .background(Color.primaryBlue.opacity(0.1))
                             .cornerRadius(12)
                         }
                     }
@@ -192,6 +216,7 @@ struct TrailDetailView: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(action: {
                     // Share trail
@@ -208,13 +233,13 @@ struct TrailDetailView: View {
     private var difficultyColor: Color {
         switch trail.difficultyLevel.lowercased() {
         case "easy":
-            return .green
+            return .lightGreen
         case "moderate":
-            return .orange
+            return .lightBlue
         case "hard", "very hard":
-            return .red
+            return .darkBlue
         default:
-            return .gray
+            return .secondary
         }
     }
     
@@ -268,7 +293,7 @@ struct StatBox: View {
         }
         .frame(maxWidth: .infinity)
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color(.lightBlue))
         .cornerRadius(12)
     }
 }
@@ -340,8 +365,12 @@ struct TrailDetailView_Previews: PreviewProvider {
         )
         
         NavigationStack {
+            let prefs = UserPreferences()
+            let datamanager = DataManager(userPreferences: prefs)
+            
             TrailDetailView(trail: sampleTrail)
-                .environmentObject(UserPreferences())
+                .environmentObject(prefs)
+                .environmentObject(datamanager)
         }
     }
 }

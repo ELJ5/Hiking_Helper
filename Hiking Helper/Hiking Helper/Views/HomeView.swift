@@ -6,19 +6,23 @@
 //
 
 import SwiftUI
+import MapKit
 
 struct HomeView: View {
     @EnvironmentObject var userPreferences: UserPreferences
     @EnvironmentObject var dataManager: DataManager
     @StateObject private var goalDataManager: GoalDataManager
     
-    @State private var navigateToProfile = false
+    @State private var showProfile = false
+    @State private var showChatbot = false
     @State private var navigateToChatbot = false
     @State private var navigateToGoals = false
     @State private var searchText = ""
     @State private var showAllRecommended = false
     @State private var showAllEasier = false
     @State private var showAllOther = false
+    @State private var cameraPosition: MapCameraPosition = .automatic
+    @State private var selectedTrail: Trail?
     
     // Standard initializer
     init() {
@@ -145,418 +149,632 @@ struct HomeView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Header with buttons
-            HStack {
-                Button(action: {
-                    navigateToChatbot = true
-                }) {
-                    Image(systemName: "message.fill")
-                        .font(.title)
-                        .foregroundColor(.green)
-                        .padding(.leading, 20)
+        ZStack {
+            VStack(spacing: 0) {
+                if !showProfile && !showChatbot {
+                    headerView
+                    ScrollView {
+                        VStack(spacing: 20) {
+                            if userPreferences.trailPreferences.helper {
+                                progressAndGoalsSection
+                            }
+                            recommendedTrailsSection
+                            easierTrailsSection
+                            exploreOtherTrailsSection
+                            mapSection
+                        }
                         .padding(.top, 10)
-                }
-                .navigationDestination(isPresented: $navigateToChatbot) {
-                    ChatbotView()
-                        .environmentObject(userPreferences)
-                        .environmentObject(dataManager)
-                }
-                
-                Spacer()
-                
-                Button(action: {
-                    navigateToProfile = true
-                    print("hit button")
-                }) {
-                    Image(systemName: "person.fill")
-                        .font(.title)
-                        .foregroundColor(.blue)
-                        .padding(.trailing, 20)
-                        .padding(.top, 10)
-                }
-                .navigationDestination(isPresented: $navigateToProfile) {
-                    ProfileView()
-                        .environmentObject(userPreferences)
-                        .environmentObject(dataManager)
+                    }
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .trailing),
+                        removal: .move(edge: .trailing)
+                    ))
                 }
             }
-            .padding(.bottom, 10)
             
-            // Main content
-            ScrollView {
-                VStack(spacing: 20) {
-                    // Progress and Checklist section
-                    HStack(alignment: .top, spacing: 20) {
-                        // Progress Circle
-                        VStack {
-                            Text("Progress")
-                                .font(.headline)
-                            Text("\(Int(goalDataManager.completionPercentage))%")
-                                .font(.title2)
-                                .bold()
-                            
-                            ZStack {
-                                Circle()
-                                    .stroke(Color.gray.opacity(0.2), lineWidth: 10)
-                                
-                                Circle()
-                                    .trim(from: 0, to: CGFloat(goalDataManager.completionPercentage / 100))
-                                    .stroke(
-                                        LinearGradient(
-                                            gradient: Gradient(colors: [.green, .blue]),
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        ),
-                                        style: StrokeStyle(lineWidth: 10, lineCap: .round)
-                                    )
-                                    .rotationEffect(.degrees(-90))
-                                    .animation(.spring(response: 0.6, dampingFraction: 0.8), value: goalDataManager.completionPercentage)
-                                
-                                // Center stats
-                                VStack(spacing: 2) {
-                                    Text("\(goalDataManager.completedGoals.count)")
-                                        .font(.title3)
-                                        .fontWeight(.bold)
-                                        .foregroundColor(.green)
-                                    Text("of \(goalDataManager.goals.count)")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-                            .frame(width: 125, height: 125)
-                            .padding()
-                        }
-                        
-                        // Checklist
-                        VStack {
-                            HStack {
-                                Text("Goals")
-                                    .font(.headline)
-                                    .padding(.top, 15)
-                                
-                                Spacer()
-                                
-                                Button(action: {
-                                    navigateToGoals = true
-                                }) {
-                                    Image(systemName: "arrow.right.circle.fill")
-                                        .foregroundColor(.green)
-                                        .padding(.top, 15)
-                                }
-                            }
-                            .padding(.horizontal)
-                            
-                            if goalDataManager.pendingGoals.isEmpty && goalDataManager.goals.isEmpty {
-                                // Empty state
-                                VStack(spacing: 8) {
-                                    Image(systemName: "target")
-                                        .font(.title2)
-                                        .foregroundColor(.secondary)
-                                    Text("No goals yet")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                    Button(action: {
-                                        navigateToGoals = true
-                                    }) {
-                                        Text("Add Goals")
-                                            .font(.caption)
-                                            .fontWeight(.medium)
-                                            .foregroundColor(.green)
-                                    }
-                                }
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                .padding()
-                            } else if goalDataManager.pendingGoals.isEmpty {
-                                // All completed state
-                                VStack(spacing: 8) {
-                                    Image(systemName: "trophy.fill")
-                                        .font(.title2)
-                                        .foregroundColor(.yellow)
-                                    Text("All done!")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                .padding()
-                            } else {
-                                // Goals list
-                                ScrollView {
-                                    VStack(alignment: .leading, spacing: 10) {
-                                        ForEach(goalDataManager.pendingGoals.prefix(6)) { goal in
-                                            HStack {
-                                                Button(action: {
-                                                    goalDataManager.toggleGoalCompletion(id: goal.id)
-                                                }) {
-                                                    Image(systemName: "circle")
-                                                        .foregroundColor(.green)
-                                                }
-                                                .buttonStyle(PlainButtonStyle())
-                                                
-                                                VStack(alignment: .leading, spacing: 2) {
-                                                    Text(goal.title)
-                                                        .font(.subheadline)
-                                                        .lineLimit(1)
-                                                    
-                                                    Text(goal.category.rawValue)
-                                                        .font(.caption2)
-                                                        .foregroundColor(.secondary)
-                                                }
-                                            }
-                                        }
-                                        
-                                        if goalDataManager.pendingGoals.count > 6 {
-                                            Text("+\(goalDataManager.pendingGoals.count - 6) more")
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
-                                                .padding(.top, 4)
-                                        }
-                                    }
-                                    .padding()
-                                }
-                            }
-                        }
-                        .frame(height: 200)
-                        .background(
-                            RoundedRectangle(cornerRadius: 15)
-                                .fill(Color(.systemGray6))
-                        )
-                        .frame(maxWidth: .infinity)
-                    }
-                    .padding(.horizontal)
-                    
-                    // Recommended Trails (matching preferences)
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Text("Recommended For You")
-                                .font(.title2)
-                                .bold()
-                            
-                            Spacer()
-                            
-                            Text("\(getMatchingTrails().count) trails")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        
-                        if getMatchingTrails().isEmpty {
-                            VStack(spacing: 8) {
-                                Image(systemName: "leaf")
-                                    .font(.title)
-                                    .foregroundColor(.secondary)
-                                Text("No trails match your preferences")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                                Text("Try adjusting your settings in Profile")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 20)
-                        } else {
-                            VStack(spacing: 10) {
-                                ForEach(getMatchingTrails().prefix(showAllRecommended ? getMatchingTrails().count : 3)) { trail in
-                                    TrailSearchResultRow(
-                                        trail: trail,
-                                        isCompleted: userPreferences.trailPreferences.isTrailCompleted(trail.id)
-                                    )
-                                }
-                                
-                                if getMatchingTrails().count > 3 {
-                                    Button(action: {
-                                        withAnimation {
-                                            showAllRecommended.toggle()
-                                        }
-                                    }) {
-                                        HStack {
-                                            Text(showAllRecommended ? "Show Less" : "Show \(getMatchingTrails().count - 3) More")
-                                                .font(.subheadline)
-                                                .fontWeight(.medium)
-                                            Image(systemName: showAllRecommended ? "chevron.up" : "chevron.down")
-                                                .font(.caption)
-                                        }
-                                        .foregroundColor(.blue)
-                                        .padding(.vertical, 8)
-                                        .frame(maxWidth: .infinity)
-                                        .background(Color.blue.opacity(0.1))
-                                        .cornerRadius(8)
-                                    }
-                                    .padding(.top, 4)
-                                }
-                            }
-                        }
-                    }
-                    .padding(.horizontal)
-                    
-                    // Build Up Trails (easier than preferences)
-                    if !getEasierTrails().isEmpty {
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("Build Up To Your Goals")
-                                        .font(.title2)
-                                        .bold()
-                                    Text("Easier trails to help you progress")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-                                
-                                Spacer()
-                                
-                                Text("\(getEasierTrails().count) trails")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                            
-                            VStack(spacing: 10) {
-                                ForEach(getEasierTrails().prefix(showAllEasier ? getEasierTrails().count : 3)) { trail in
-                                    TrailSearchResultRow(
-                                        trail: trail,
-                                        isCompleted: userPreferences.trailPreferences.isTrailCompleted(trail.id)
-                                    )
-                                }
-                                
-                                if getEasierTrails().count > 3 {
-                                    Button(action: {
-                                        withAnimation {
-                                            showAllEasier.toggle()
-                                        }
-                                    }) {
-                                        HStack {
-                                            Text(showAllEasier ? "Show Less" : "Show \(getEasierTrails().count - 3) More")
-                                                .font(.subheadline)
-                                                .fontWeight(.medium)
-                                            Image(systemName: showAllEasier ? "chevron.up" : "chevron.down")
-                                                .font(.caption)
-                                        }
-                                        .foregroundColor(.green)
-                                        .padding(.vertical, 8)
-                                        .frame(maxWidth: .infinity)
-                                        .background(Color.green.opacity(0.1))
-                                        .cornerRadius(8)
-                                    }
-                                    .padding(.top, 4)
-                                }
-                            }
-                        }
-                        .padding(.horizontal)
-                    }
-                    
-                    // Explore Other Trails (non-matching)
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Text("Explore Other Trails")
-                                .font(.title2)
-                                .bold()
-                            
-                            Spacer()
-                            
-                            Text("\(getNonMatchingTrails().count) trails")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        
-                        // Search Bar for other trails
-                        HStack {
-                            Image(systemName: "magnifyingglass")
-                                .foregroundColor(.secondary)
-                            
-                            TextField("Search by name or state", text: $searchText)
-                                .textFieldStyle(PlainTextFieldStyle())
-                            
-                            if !searchText.isEmpty {
-                                Button(action: { searchText = "" }) {
-                                    Image(systemName: "xmark.circle.fill")
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-                        }
-                        .padding(12)
-                        .background(Color(.systemGray6))
-                        .cornerRadius(10)
-                        
-                        if getNonMatchingTrails().isEmpty {
-                            VStack(spacing: 8) {
-                                Image(systemName: "magnifyingglass")
-                                    .font(.title)
-                                    .foregroundColor(.secondary)
-                                Text(searchText.isEmpty ? "All trails match your preferences!" : "No trails found")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 20)
-                        } else {
-                            VStack(spacing: 10) {
-                                ForEach(getNonMatchingTrails().prefix(showAllOther ? getNonMatchingTrails().count : 2)) { trail in
-                                    TrailSearchResultRow(
-                                        trail: trail,
-                                        isCompleted: userPreferences.trailPreferences.isTrailCompleted(trail.id)
-                                    )
-                                }
-                                
-                                if getNonMatchingTrails().count > 2 {
-                                    Button(action: {
-                                        withAnimation {
-                                            showAllOther.toggle()
-                                        }
-                                    }) {
-                                        HStack {
-                                            Text(showAllOther ? "Show Less" : "Show \(getNonMatchingTrails().count - 2) More")
-                                                .font(.subheadline)
-                                                .fontWeight(.medium)
-                                            Image(systemName: showAllOther ? "chevron.up" : "chevron.down")
-                                                .font(.caption)
-                                        }
-                                        .foregroundColor(.orange)
-                                        .padding(.vertical, 8)
-                                        .frame(maxWidth: .infinity)
-                                        .background(Color.orange.opacity(0.1))
-                                        .cornerRadius(8)
-                                    }
-                                    .padding(.top, 4)
-                                }
-                            }
-                        }
-                    }
-                    .padding(.horizontal)
-                    
-                    // Nearby Hikes section
-                    VStack {
-                        Text("Nearby Hikes")
-                            .font(.title2)
-                            .bold()
-                            .padding(.top, 20)
-                        
-                        // Placeholder for map
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 15)
-                                .fill(Color(.systemGray6))
-                                .frame(height: 300)
-                            
-                            VStack {
-                                Image(systemName: "map.fill")
-                                    .font(.system(size: 60))
-                                    .foregroundColor(.green)
-                                Text("Map Coming Soon")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                        .padding(.horizontal)
-                    }
-                }
-                .padding(.top, 10)
+            // Chatbot overlay
+            if showChatbot {
+                ChatbotView(isPresentedBot: $showChatbot)
+                    .environmentObject(userPreferences)
+                    .environmentObject(dataManager)
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .leading),
+                        removal: .move(edge: .leading)
+                    ))
+                    .zIndex(1)
+            }
+            
+            // Profile overlay
+            if showProfile {
+                ProfileView(isPresented: $showProfile)
+                    .environmentObject(userPreferences)
+                    .environmentObject(dataManager)
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .trailing),
+                        removal: .move(edge: .trailing)
+                    ))
+                    .zIndex(1)
             }
         }
-        .navigationBarHidden(true)
+        .animation(.easeInOut(duration: 0.3), value: showChatbot)
+        .animation(.easeInOut(duration: 0.3), value: showProfile)
         .navigationDestination(isPresented: $navigateToGoals) {
             GoalsView(userPreferences: userPreferences, goalDataManager: goalDataManager)
         }
         .onAppear {
-            // Load trails if not already loaded
             dataManager.loadTrailsIfNeeded()
-            print("📍 HomeView appeared - allTrails count: \(dataManager.allTrails.count)")
+            updateMapRegion()
+        }
+        .onChange(of: userPreferences.trailPreferences.selectedStates) { _, _ in
+            updateMapRegion()
+        }
+    }
+    
+    // MARK: - View Components
+    
+    private var headerView: some View {
+        HStack {
+            if userPreferences.trailPreferences.helper {
+                Button(action: {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        showChatbot.toggle()
+                    }
+                }) {
+                    Image(systemName: showChatbot ? "xmark.circle.fill" : "message.fill")
+                        .font(.title)
+                        .foregroundColor(.primaryGreen)  // Changed
+                        .padding(.leading, 20)
+                        .padding(.top, 10)
+                }
+            }
+            
+            Spacer()
+            
+            Button(action: {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    showProfile.toggle()
+                }
+            }) {
+                Image(systemName: showProfile ? "xmark.circle.fill" : "person.fill")
+                    .font(.title)
+                    .foregroundColor(.primaryBlue)  // Changed
+                    .padding(.trailing, 20)
+                    .padding(.top, 10)
+            }
+        }
+        .padding(.bottom, 10)
+        .zIndex(10)
+    }
+    
+    private var progressAndGoalsSection: some View {
+        HStack(alignment: .top, spacing: 20) {
+            progressCircle
+            goalsChecklist
+        }
+        .padding(.horizontal)
+    }
+
+    private var progressCircle: some View {
+        VStack {
+            Text("Progress")
+                .font(.headline)
+                .foregroundColor(.textPrimary)  // Added
+            Text("\(Int(goalDataManager.completionPercentage))%")
+                .font(.title2)
+                .bold()
+                .foregroundColor(.textPrimary)  // Added
+            
+            ZStack {
+                Circle()
+                    .stroke(.borderColor1, lineWidth: 10)  // Changed
+                
+                Circle()
+                    .trim(from: 0, to: CGFloat(goalDataManager.completionPercentage / 100))
+                    .stroke(
+                        LinearGradient(
+                            gradient: Gradient(colors: [.primaryGreen, .primaryBlue]),
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        style: StrokeStyle(lineWidth: 10, lineCap: .round)
+                    )
+                    .rotationEffect(.degrees(-90))
+                    .animation(.spring(response: 0.6, dampingFraction: 0.8), value: goalDataManager.completionPercentage)
+                
+                VStack(spacing: 2) {
+                    Text("\(goalDataManager.completedGoals.count)")
+                        .font(.title3)
+                        .fontWeight(.bold)
+                        .foregroundColor(.primaryGreen)  // Changed
+                    Text("of \(goalDataManager.goals.count)")
+                        .font(.caption)
+                        .foregroundColor(.textSecondary)  // Changed
+                }
+            }
+            .frame(width: 125, height: 125)
+            .padding()
+        }
+    }
+
+    private var goalsChecklist: some View {
+        VStack {
+            HStack {
+                Text("Goals")
+                    .font(.headline)
+                    .foregroundColor(.textPrimary)  // Added
+                    .padding(.top, 15)
+                
+                Spacer()
+                
+                Button(action: {
+                    navigateToGoals = true
+                }) {
+                    Image(systemName: "arrow.right.circle.fill")
+                        .foregroundColor(.primaryBlue)  // Changed
+                        .padding(.top, 15)
+                }
+            }
+            .padding(.horizontal)
+            
+            goalsContent
+        }
+        .frame(height: 200)
+        .background(
+            RoundedRectangle(cornerRadius: 15)
+                .fill(Color.surface)  // Changed
+        )
+        .frame(maxWidth: .infinity)
+    }
+
+    @ViewBuilder
+    private var goalsContent: some View {
+        if goalDataManager.pendingGoals.isEmpty && goalDataManager.goals.isEmpty {
+            VStack(spacing: 8) {
+                Image(systemName: "target")
+                    .font(.title2)
+                    .foregroundColor(.textSecondary)  // Changed
+                Text("No goals yet")
+                    .font(.caption)
+                    .foregroundColor(.textSecondary)
+                Button(action: {
+                    navigateToGoals = true
+                }) {
+                    Text("Add Goals")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundColor(.primaryBlue)  // Changed
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding()
+        } else if goalDataManager.pendingGoals.isEmpty {
+            VStack(spacing: 8) {
+                Image(systemName: "trophy.fill")
+                    .font(.title2)
+                    .foregroundColor(.accentGreen)  // Changed from yellow
+                Text("All done!")
+                    .font(.caption)
+                    .foregroundColor(.textSecondary)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding()
+        } else {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 10) {
+                    ForEach(goalDataManager.pendingGoals.prefix(6)) { goal in
+                        HStack {
+                            Button(action: {
+                                goalDataManager.toggleGoalCompletion(id: goal.id)
+                            }) {
+                                Image(systemName: "circle")
+                                    .foregroundColor(.primaryBlue)  // Changed
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(goal.title)
+                                    .font(.subheadline)
+                                    .foregroundColor(.textPrimary)  // Added
+                                    .lineLimit(1)
+                                
+                                Text(goal.category.rawValue)
+                                    .font(.caption2)
+                                    .foregroundColor(.textSecondary)
+                            }
+                        }
+                    }
+                    
+                    if goalDataManager.pendingGoals.count > 6 {
+                        Text("+\(goalDataManager.pendingGoals.count - 6) more")
+                            .font(.caption)
+                            .foregroundColor(.textSecondary)
+                            .padding(.top, 4)
+                    }
+                }
+                .padding()
+            }
+        }
+    }
+
+    private var recommendedTrailsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Recommended For You")
+                        .font(.title2)
+                        .bold()
+                        .foregroundColor(.textPrimary)  // Added
+                    Text("Trails matching your Preferences")
+                        .font(.caption)
+                        .foregroundColor(.textSecondary)  // Changed
+                }
+                
+                Spacer()
+                
+                Text("\(getMatchingTrails().count) trails")
+                    .font(.caption)
+                    .foregroundColor(.textSecondary)  // Changed
+            }
+            
+            recommendedTrailsList
+        }
+        .padding(.horizontal)
+    }
+
+    @ViewBuilder
+    private var recommendedTrailsList: some View {
+        if getMatchingTrails().isEmpty {
+            VStack(spacing: 8) {
+                Image(systemName: "leaf")
+                    .font(.title)
+                    .foregroundColor(.textSecondary)  // Changed
+                Text("No trails match your preferences")
+                    .font(.subheadline)
+                    .foregroundColor(.textSecondary)  // Changed
+                Text("Try adjusting your settings in Profile")
+                    .font(.caption)
+                    .foregroundColor(.textSecondary)  // Changed
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 20)
+        } else {
+            VStack(spacing: 10) {
+                ForEach(getMatchingTrails().prefix(showAllRecommended ? getMatchingTrails().count : 3)) { trail in
+                    TrailSearchResultRow(
+                        trail: trail,
+                        isCompleted: userPreferences.trailPreferences.isTrailCompleted(trail.id)
+                    )
+                }
+                
+                if getMatchingTrails().count > 3 {
+                    Button(action: {
+                        withAnimation {
+                            showAllRecommended.toggle()
+                        }
+                    }) {
+                        HStack {
+                            Text(showAllRecommended ? "Show Less" : "Show \(getMatchingTrails().count - 3) More")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            Image(systemName: showAllRecommended ? "chevron.up" : "chevron.down")
+                                .font(.caption)
+                        }
+                        .foregroundColor(.primaryBlue)  // Changed
+                        .padding(.vertical, 8)
+                        .frame(maxWidth: .infinity)
+                        .background(Color.primaryBlue.opacity(0.1))  // Changed
+                        .cornerRadius(8)
+                    }
+                    .padding(.top, 4)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var easierTrailsSection: some View {
+        if !getEasierTrails().isEmpty {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Helpful Trails")
+                            .font(.title2)
+                            .bold()
+                            .foregroundColor(.textPrimary)  // Added
+                        Text("Easier trails to help you progress")
+                            .font(.caption)
+                            .foregroundColor(.textSecondary)  // Changed
+                    }
+                    
+                    Spacer()
+                    
+                    Text("\(getEasierTrails().count) trails")
+                        .font(.caption)
+                        .foregroundColor(.textSecondary)  // Changed
+                }
+                
+                VStack(spacing: 10) {
+                    ForEach(getEasierTrails().prefix(showAllEasier ? getEasierTrails().count : 3)) { trail in
+                        TrailSearchResultRow(
+                            trail: trail,
+                            isCompleted: userPreferences.trailPreferences.isTrailCompleted(trail.id)
+                        )
+                    }
+                    
+                    if getEasierTrails().count > 3 {
+                        Button(action: {
+                            withAnimation {
+                                showAllEasier.toggle()
+                            }
+                        }) {
+                            HStack {
+                                Text(showAllEasier ? "Show Less" : "Show \(getEasierTrails().count - 3) More")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                                Image(systemName: showAllEasier ? "chevron.up" : "chevron.down")
+                                    .font(.caption)
+                            }
+                            .foregroundColor(.primaryGreen)  // Changed from darkGreen
+                            .padding(.vertical, 8)
+                            .frame(maxWidth: .infinity)
+                            .background(Color.lightGreen.opacity(0.1))  // Changed
+                            .cornerRadius(8)
+                        }
+                        .padding(.top, 4)
+                    }
+                }
+            }
+            .padding(.horizontal)
+        }
+    }
+
+    private var exploreOtherTrailsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Explore Other Trails")
+                    .font(.title2)
+                    .bold()
+                    .foregroundColor(.textPrimary)  // Added
+                
+                Spacer()
+                
+                Text("\(getNonMatchingTrails().count) trails")
+                    .font(.caption)
+                    .foregroundColor(.textSecondary)  // Changed
+            }
+            
+            searchBar
+            otherTrailsList
+        }
+        .padding(.horizontal)
+    }
+
+    private var searchBar: some View {
+        HStack {
+            Image(systemName: "magnifyingglass")
+                .foregroundColor(.textSecondary)  // Changed
+            
+            TextField("Search by name or state", text: $searchText)
+                .textFieldStyle(PlainTextFieldStyle())
+            
+            if !searchText.isEmpty {
+                Button(action: { searchText = "" }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.textSecondary)  // Changed
+                }
+            }
+        }
+        .padding(12)
+        .background(Color.surface)  // Changed
+        .cornerRadius(10)
+    }
+
+    @ViewBuilder
+    private var otherTrailsList: some View {
+        if getNonMatchingTrails().isEmpty {
+            VStack(spacing: 8) {
+                Image(systemName: "magnifyingglass")
+                    .font(.title)
+                    .foregroundColor(.textSecondary)  // Changed
+                Text(searchText.isEmpty ? "All trails match your preferences!" : "No trails found")
+                    .font(.subheadline)
+                    .foregroundColor(.textSecondary)  // Changed
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 20)
+        } else {
+            VStack(spacing: 10) {
+                ForEach(getNonMatchingTrails().prefix(showAllOther ? getNonMatchingTrails().count : 2)) { trail in
+                    TrailSearchResultRow(
+                        trail: trail,
+                        isCompleted: userPreferences.trailPreferences.isTrailCompleted(trail.id)
+                    )
+                }
+                
+                if getNonMatchingTrails().count > 2 {
+                    Button(action: {
+                        withAnimation {
+                            showAllOther.toggle()
+                        }
+                    }) {
+                        HStack {
+                            Text(showAllOther ? "Show Less" : "Show \(getNonMatchingTrails().count - 2) More")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            Image(systemName: showAllOther ? "chevron.up" : "chevron.down")
+                                .font(.caption)
+                        }
+                        .foregroundColor(.accentBlue)  // Changed from orange
+                        .padding(.vertical, 8)
+                        .frame(maxWidth: .infinity)
+                        .background(Color.accentBlue.opacity(0.1))  // Changed
+                        .cornerRadius(8)
+                    }
+                    .padding(.top, 4)
+                }
+            }
+        }
+    }
+
+    private var mapSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Recommended Trails Map")
+                .font(.title2)
+                .bold()
+                .foregroundColor(.textPrimary)  // Added
+                .padding(.top, 20)
+            
+            mapContent
+        }
+        .padding(.horizontal)
+    }
+
+    @ViewBuilder
+    private var mapContent: some View {
+        if getMatchingTrails().isEmpty {
+            ZStack {
+                RoundedRectangle(cornerRadius: 15)
+                    .fill(Color.surface)  // Changed
+                    .frame(height: 300)
+                
+                VStack {
+                    Image(systemName: "map.fill")
+                        .font(.system(size: 60))
+                        .foregroundColor(.primaryBlue)  // Changed
+                    Text("No recommended trails to show")
+                        .font(.caption)
+                        .foregroundColor(.textSecondary)  // Changed
+                }
+            }
+        } else {
+            Map(position: $cameraPosition, selection: $selectedTrail) {
+                ForEach(getMatchingTrails()) { trail in
+                    Annotation(trail.trailName, coordinate: CLLocationCoordinate2D(
+                        latitude: trail.latitude,
+                        longitude: trail.longitude
+                    )) {
+                        VStack(spacing: 0) {
+                            Image(systemName: "figure.hiking")
+                                .font(.title3)
+                                .foregroundColor(.white)
+                                .padding(8)
+                                .background(difficultyColor(for: trail.difficultyLevel))
+                                .clipShape(Circle())
+                                .overlay(
+                                    Circle()
+                                        .stroke(Color.white, lineWidth: 2)
+                                )
+                            
+                            Image(systemName: "triangle.fill")
+                                .font(.caption)
+                                .foregroundColor(difficultyColor(for: trail.difficultyLevel))
+                                .rotationEffect(.degrees(180))
+                                .offset(y: -5)
+                        }
+                    }
+                    .tag(trail)
+                }
+            }
+            .mapStyle(.standard(elevation: .realistic))
+            .frame(height: 300)
+            .cornerRadius(15)
+            
+            if let selectedTrail = selectedTrail {
+                selectedTrailCard(selectedTrail)
+            }
+        }
+    }
+
+    private func selectedTrailCard(_ trail: Trail) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(trail.trailName)
+                        .font(.headline)
+                        .foregroundColor(.textPrimary)  // Added
+                    
+                    HStack(spacing: 12) {
+                        Label(String(format: "%.1f mi", trail.distanceMiles), systemImage: "figure.walk")
+                        Label("\(Int(trail.elevationGainFeet)) ft", systemImage: "arrow.up.right")
+                        Text(trail.difficultyLevel)
+                            .font(.caption)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(difficultyColor(for: trail.difficultyLevel).opacity(0.2))
+                            .foregroundColor(difficultyColor(for: trail.difficultyLevel))
+                            .cornerRadius(4)
+                    }
+                    .font(.caption)
+                    .foregroundColor(.textSecondary)  // Changed
+                }
+                
+                Spacer()
+                
+                NavigationLink {
+                    TrailDetailView(trail: trail)
+                        .environmentObject(userPreferences)
+                        .environmentObject(dataManager)
+                } label: {
+                    Text("View Details")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color.primaryBlue)  // Changed
+                        .cornerRadius(8)
+                }
+            }
+        }
+        .padding(12)
+        .background(Color.surface)  // Changed
+        .cornerRadius(10)
+        .transition(.move(edge: .bottom).combined(with: .opacity))
+    }
+    
+    // Helper function to update map region based on recommended trails
+    private func updateMapRegion() {
+        let trails = getMatchingTrails()
+        guard !trails.isEmpty else {
+            cameraPosition = .automatic
+            return
+        }
+        
+        // Calculate center point of all trails
+        let avgLat = trails.map { $0.latitude }.reduce(0, +) / Double(trails.count)
+        let avgLon = trails.map { $0.longitude }.reduce(0, +) / Double(trails.count)
+        
+        // Calculate span to show all trails
+        let latitudes = trails.map { $0.latitude }
+        let longitudes = trails.map { $0.longitude }
+        
+        let latDelta = (latitudes.max() ?? 0) - (latitudes.min() ?? 0)
+        let lonDelta = (longitudes.max() ?? 0) - (longitudes.min() ?? 0)
+        
+        let span = MKCoordinateSpan(
+            latitudeDelta: max(latDelta * 1.5, 0.5),
+            longitudeDelta: max(lonDelta * 1.5, 0.5)
+        )
+        
+        let region = MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: avgLat, longitude: avgLon),
+            span: span
+        )
+        
+        cameraPosition = .region(region)
+    }
+    
+    // Helper function for difficulty colors
+    private func difficultyColor(for difficulty: String) -> Color {
+        switch difficulty.lowercased() {
+        case "easy":
+            return .lightGreen  // Changed
+        case "moderate":
+            return .accentBlue  // Changed
+        case "hard", "difficult", "challenging":
+            return .darkGreen  // Changed
+        default:
+            return .textSecondary  // Changed
         }
     }
 }
@@ -564,12 +782,17 @@ struct HomeView: View {
 // MARK: - Trail Search Result Row
 
 struct TrailSearchResultRow: View {
+    @EnvironmentObject var userPreferences: UserPreferences
+    @EnvironmentObject var dataManager: DataManager
+
     let trail: Trail
     let isCompleted: Bool
     
     var body: some View {
         NavigationLink {
             TrailDetailView(trail: trail)
+                .environmentObject(userPreferences)
+                .environmentObject(dataManager)
         } label: {
             HStack(spacing: 12) {
                 // Difficulty indicator
@@ -583,12 +806,12 @@ struct TrailSearchResultRow: View {
                             .font(.subheadline)
                             .fontWeight(.medium)
                             .lineLimit(1)
-                            .foregroundColor(.primary)
+                            .foregroundColor(.textPrimary)  // Changed
                         
                         if isCompleted {
                             Image(systemName: "checkmark.circle.fill")
                                 .font(.caption)
-                                .foregroundColor(.green)
+                                .foregroundColor(.primaryGreen)  // Changed
                         }
                     }
                     
@@ -597,7 +820,7 @@ struct TrailSearchResultRow: View {
                         Label("\(Int(trail.elevationGainFeet)) ft", systemImage: "arrow.up.right")
                     }
                     .font(.caption2)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.textSecondary)  // Changed
                 }
                 
                 Spacer()
@@ -613,10 +836,10 @@ struct TrailSearchResultRow: View {
                 
                 Image(systemName: "chevron.right")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.textSecondary)  // Changed
             }
             .padding(12)
-            .background(Color(.systemGray6))
+            .background(Color.surface)  // Changed
             .cornerRadius(10)
         }
     }
@@ -624,21 +847,22 @@ struct TrailSearchResultRow: View {
     private var difficultyColor: Color {
         switch trail.difficultyLevel.lowercased() {
         case "easy":
-            return .green
+            return .lightGreen  // Changed
         case "moderate":
-            return .orange
+            return .accentBlue  // Changed
         case "hard", "difficult", "challenging":
-            return .red
+            return .darkGreen  // Changed
         default:
-            return .gray
+            return .textSecondary  // Changed
         }
     }
 }
 
-
 #Preview {
     let prefs = UserPreferences()
     let dataManager = DataManager(userPreferences: prefs)
+    
+    prefs.trailPreferences.helper = true
     
     return NavigationStack {
         HomeView(withTestData: true)

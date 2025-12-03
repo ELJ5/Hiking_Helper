@@ -8,6 +8,8 @@ class GoalDataManager: ObservableObject {
     @Published private(set) var isLoading: Bool = false
     @Published private(set) var errorMessage: String?
     
+    private let openAIService = OpenAIService()
+    
     // MARK: - Private Properties
     private let userDefaultsKey = "savedHikingGoals"
     private let fileManager = FileManager.default
@@ -46,156 +48,61 @@ class GoalDataManager: ObservableObject {
     
     // MARK: - AI Goal Generation
     
-    /// Generate goals based on user's trail preferences
-    func generateGoals(from preferences: TrailPreferences, timeframe: GoalTimeframe = .weekly) async {
+    func generateGoals(from preferences: TrailPreferences, timeframe: GoalTimeframe) async {
         await MainActor.run {
             isLoading = true
             errorMessage = nil
         }
         
-        let prompt = buildPrompt(from: preferences, timeframe: timeframe)
-        
         do {
-            let generatedGoals = try await callAI(with: prompt, preferences: preferences, timeframe: timeframe)
+            // Create UserPreferences wrapper
+            let userPrefs = UserPreferences()
+            userPrefs.trailPreferences = preferences
+            
+            let newGoals = try await openAIService.generatePersonalizedGoals(
+                userPreferences: userPrefs,
+                timeframe: timeframe
+            )
             
             await MainActor.run {
-                self.goals = generatedGoals
-                self.saveGoals()
-                self.isLoading = false
+                self.goals.append(contentsOf: newGoals)  // Add new goals to existing
+                saveGoals()
+                isLoading = false
             }
         } catch {
             await MainActor.run {
-                self.errorMessage = "Failed to generate goals: \(error.localizedDescription)"
-                self.isLoading = false
+                errorMessage = error.localizedDescription
+                isLoading = false
             }
         }
     }
     
-    private func buildPrompt(from preferences: TrailPreferences, timeframe: GoalTimeframe) -> String {
-        let currentLevel = preferences.isBeginner ? "beginner" : "intermediate to advanced"
-        let progressGoal = preferences.wantsToProgress ? "wants to progress from \(preferences.currentCapability) to \(preferences.desiredDistance)" : "wants to maintain current fitness"
-        
-        return """
-        You are a hiking coach and goal-setting assistant. Based on the hiker's preferences, generate 5 specific, actionable hiking goals.
-
-        Hiker Profile:
-        - Experience Level: \(currentLevel)
-        - Hiking Frequency: \(preferences.hikingFrequency)
-        - Current Capability: \(preferences.currentCapability)
-        - Desired Distance: \(preferences.desiredDistance)
-        - Preferred Difficulty: \(preferences.difficulty)
-        - Elevation Preference: \(preferences.elevation)
-        - Distance Range: \(preferences.distanceRangeText)
-        - Travel Radius: \(preferences.travelRadius)
-        - Location: \(preferences.location ?? "Not specified")
-        - Progress Goal: \(progressGoal)
-        - Trails Completed: \(preferences.completedTrailCount)
-        - Uses Helper Mode: \(preferences.helper)
-
-        Generate 5 hiking goals that are:
-        - Specific and measurable
-        - Appropriate for the \(timeframe.rawValue.lowercased()) timeframe
-        - Aligned with the \(preferences.difficulty) difficulty level
-        - Help the hiker progress toward their desired distance of \(preferences.desiredDistance)
-        - Consider their current capability of \(preferences.currentCapability)
-
-        Categories to consider: Endurance, Elevation, Distance, Frequency, Exploration, Skills & Safety
-
-        Respond ONLY with a valid JSON array of objects, each with these fields:
-        - "id": number (1-5)
-        - "title": string (goal title)
-        - "description": string (brief description)
-        - "category": string (one of: "Endurance", "Elevation", "Distance", "Frequency", "Exploration", "Skills & Safety")
-
-        Example format:
-        [
-          {"id": 1, "title": "Goal title", "description": "Brief description", "category": "Distance"}
-        ]
-
-        DO NOT include any text outside the JSON array. Your entire response must be valid JSON.
-        """
-    }
-    
-    private func callAI(with prompt: String, preferences: TrailPreferences, timeframe: GoalTimeframe) async throws -> [Goal] {
-        guard let url = URL(string: "https://api.anthropic.com/v1/messages") else {
-            throw GoalGenerationError.invalidURL
+    // Optional: Replace all goals instead of appending
+    func regenerateAllGoals(from preferences: TrailPreferences, timeframe: GoalTimeframe) async {
+        await MainActor.run {
+            isLoading = true
+            errorMessage = nil
         }
         
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        // Note: API key should be handled securely - this is a placeholder
-        // request.setValue("Bearer YOUR_API_KEY", forHTTPHeaderField: "Authorization")
-        
-        let requestBody: [String: Any] = [
-            "model": "claude-sonnet-4-20250514",
-            "max_tokens": 1000,
-            "messages": [
-                ["role": "user", "content": prompt]
-            ]
-        ]
-        
-        request.httpBody = try JSONSerialization.data(withJSONObject: requestBody)
-        
-        let (data, response) = try await URLSession.shared.data(for: request)
-        
-        guard let httpResponse = response as? HTTPURLResponse,
-              httpResponse.statusCode == 200 else {
-            throw GoalGenerationError.apiError
-        }
-        
-        // Parse the API response
-        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let content = json["content"] as? [[String: Any]],
-              let firstContent = content.first,
-              let text = firstContent["text"] as? String else {
-            throw GoalGenerationError.parsingError
-        }
-        
-        // Clean up and parse the goals JSON
-        let cleanedText = text
-            .replacingOccurrences(of: "```json", with: "")
-            .replacingOccurrences(of: "```", with: "")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        
-        guard let goalsData = cleanedText.data(using: .utf8) else {
-            throw GoalGenerationError.parsingError
-        }
-        
-        let generatedGoals = try JSONDecoder().decode([GeneratedGoal].self, from: goalsData)
-        
-        // Convert to Goal objects
-        let difficulty = mapDifficulty(from: preferences.difficulty)
-        
-        return generatedGoals.map { generated in
-            Goal(
-                title: generated.title,
-                description: generated.description,
-                category: mapCategory(from: generated.category),
-                timeframe: timeframe,
-                difficulty: difficulty
+        do {
+            let userPrefs = UserPreferences()
+            userPrefs.trailPreferences = preferences
+            
+            let newGoals = try await openAIService.generatePersonalizedGoals(
+                userPreferences: userPrefs,
+                timeframe: timeframe
             )
-        }
-    }
-    
-    private func mapCategory(from string: String) -> GoalCategory {
-        switch string.lowercased() {
-        case "endurance": return .endurance
-        case "elevation": return .elevation
-        case "distance": return .distance
-        case "frequency": return .frequency
-        case "exploration": return .exploration
-        case "skills & safety", "skills": return .skills
-        default: return .distance
-        }
-    }
-    
-    private func mapDifficulty(from string: String) -> GoalDifficulty {
-        switch string.lowercased() {
-        case "easy": return .easy
-        case "moderate": return .moderate
-        case "challenging", "hard", "difficult": return .challenging
-        default: return .moderate
+            
+            await MainActor.run {
+                self.goals = newGoals  // Replace all goals
+                saveGoals()
+                isLoading = false
+            }
+        } catch {
+            await MainActor.run {
+                errorMessage = error.localizedDescription
+                isLoading = false
+            }
         }
     }
     
@@ -315,13 +222,6 @@ class GoalDataManager: ObservableObject {
 
 // MARK: - Supporting Types
 
-struct GeneratedGoal: Codable {
-    let id: Int
-    let title: String
-    let description: String
-    let category: String
-}
-
 struct GoalStatistics {
     let totalGoals: Int
     let completedGoals: Int
@@ -329,20 +229,6 @@ struct GoalStatistics {
     let completionRate: Double
     let goalsByCategory: [GoalCategory: Int]
     let recentlyCompleted: [Goal]
-}
-
-enum GoalGenerationError: LocalizedError {
-    case invalidURL
-    case apiError
-    case parsingError
-    
-    var errorDescription: String? {
-        switch self {
-        case .invalidURL: return "Invalid API URL"
-        case .apiError: return "API request failed"
-        case .parsingError: return "Failed to parse response"
-        }
-    }
 }
 
 // MARK: - Sample Goals for Previews

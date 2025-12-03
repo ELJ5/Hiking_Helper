@@ -6,10 +6,20 @@
 //
 
 import SwiftUI
+import PhotosUI
 
 struct ProfileView: View {
+    @Binding var isPresented: Bool
+    
     @EnvironmentObject var dataManager: DataManager
     @EnvironmentObject var userPreferences: UserPreferences
+    
+    @State private var selectedItem: PhotosPickerItem?
+    @State private var profileImage: Image?
+    @State private var profileUIImage: UIImage?
+    
+    @State private var username: String = UserDefaults.standard.string(forKey: "username") ?? "Username1234"
+    @State private var isEditingUsername = false
     
     @State private var filteredTrails: [Trail] = []
     @State private var navigateToHome = false
@@ -21,24 +31,17 @@ struct ProfileView: View {
             // Header buttons
             HStack {
                 Button(action: {
-                    navigateToHome = true
-                }){
-                    Image(systemName: "house.fill")
-                        .font(.title)
-                        .foregroundColor(.green)
-                        .padding(.leading, 10)
-                        .padding(.top, 10)
-                }
-                .navigationDestination(isPresented: $navigateToHome) {
-                    HomeView()
-                      .environmentObject(userPreferences)
-                      .environmentObject(dataManager)
-                      .transition(
-                          .move(edge: .leading)
-                          .combined(with: .opacity)
-                      )
-                }
+                    isPresented = false
+                                }){
+                                    Image(systemName: "house.fill")
+                                        .font(.title)
+                                        .foregroundColor(.blue)
+                                        .padding(.leading, 10)
+                                        .padding(.top, 10)
+                                }
+               
                 Spacer()
+            
                 Button(action: {
                     navigateToSettings = true
                 }){
@@ -58,16 +61,84 @@ struct ProfileView: View {
             ScrollView {
                 VStack(spacing: 20) {
                     // Profile image and username
-                    Image(systemName: "person.circle.fill")
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 150, height: 150)
-                        .foregroundColor(.green)
-                        .padding(.top, 20)
+                    VStack(spacing: 20) {
+                        // Display the profile picture
+                        ZStack(alignment: .bottomTrailing) {
+                            if let profileImage {
+                                profileImage
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: 120, height: 120)
+                                    .clipShape(Circle())
+                                    .overlay(Circle().stroke(Color.blue, lineWidth: 3))
+                            } else {
+                                // Placeholder when no image selected
+                                Image(systemName: "person.circle.fill")
+                                    .resizable()
+                                    .frame(width: 120, height: 120)
+                                    .foregroundColor(.gray)
+                            }
+                            
+                            // Camera button to select photo
+                            PhotosPicker(selection: $selectedItem, matching: .images, photoLibrary: .shared()) {
+                                Image(systemName: "camera.circle.fill")
+                                    .font(.system(size: 35))
+                                    .foregroundColor(.blue)
+                                    .background(Circle().fill(Color.white))
+                            }
+                            .offset(x: 5, y: 5)
+                        }
+                        
+                        Text("Tap camera to change photo")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .onChange(of: selectedItem) { _, newItem in
+                        Task {
+                            if let data = try? await newItem?.loadTransferable(type: Data.self),
+                               let uiImage = UIImage(data: data) {
+                                profileUIImage = uiImage
+                                profileImage = Image(uiImage: uiImage)
+                                // Save the image
+                                saveProfileImage(uiImage)
+                            }
+                        }
+                    }
+                    .onAppear {
+                        // Load saved image when view appears
+                        loadProfileImage()
+                    }
                     
-                    Text("Username1234")
-                        .font(.largeTitle)
-                        .bold()
+                    if isEditingUsername {
+                        TextField("Username", text: $username)
+                            .font(.largeTitle)
+                            .bold()
+                            .multilineTextAlignment(.center)
+                            .textFieldStyle(.plain)
+                            .padding(.horizontal, 40)
+                            .onSubmit {
+                                isEditingUsername = false
+                                saveUsername()
+                            }
+                        
+                        Text("Tap return when done")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    } else {
+                        HStack(spacing: 8) {
+                            Text(username)
+                                .font(.largeTitle)
+                                .bold()
+                            
+                            Button(action: {
+                                isEditingUsername = true
+                            }) {
+                                Image(systemName: "pencil.circle.fill")
+                                    .foregroundColor(.blue)
+                                    .font(.title2)
+                            }
+                        }
+                    }
                     
                     // Stats Cards
                     HStack(spacing: 15) {
@@ -136,6 +207,7 @@ struct ProfileView: View {
                                                     .font(.caption)
                                                     .foregroundColor(.secondary)
                                             }
+                                            //Add navigation part here
                                             Spacer()
                                             Image(systemName: "checkmark.circle.fill")
                                                 .foregroundColor(.green)
@@ -250,6 +322,22 @@ struct ProfileView: View {
         return dataManager.allTrails.filter { completedIds.contains($0.id) }
     }
     
+    private func saveProfileImage(_ image: UIImage) {
+        if let data = image.jpegData(compressionQuality: 0.8) {
+            UserDefaults.standard.set(data, forKey: "profileImage")
+        }
+    }
+
+    private func loadProfileImage() {
+        if let data = UserDefaults.standard.data(forKey: "profileImage"),
+           let uiImage = UIImage(data: data) {
+            profileUIImage = uiImage
+            profileImage = Image(uiImage: uiImage)
+        }
+    }
+    private func saveUsername() {
+        UserDefaults.standard.set(username, forKey: "username")
+    }
 }
 
 // MARK: - Stat Card View
@@ -277,6 +365,7 @@ struct StatCard: View {
         .background(Color(.systemGray6))
         .cornerRadius(12)
     }
+    
 }
 
 // MARK: - Preference Row View
@@ -296,7 +385,10 @@ struct PreferenceRow: View {
                 .bold()
         }
     }
+    
 }
+
+
 
 #Preview("Profile") {
     let prefs = UserPreferences()
@@ -313,7 +405,7 @@ struct PreferenceRow: View {
     prefs.trailPreferences.completedTrails = [1001, 1002, 1003]  // Sample completed trail IDs
     
     return NavigationStack {
-        ProfileView()
+        ProfileView(isPresented: .constant(true))
             .environmentObject(prefs)
             .environmentObject(dataManager)
     }
