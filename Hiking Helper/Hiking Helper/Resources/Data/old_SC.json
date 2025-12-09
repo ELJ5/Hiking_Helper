@@ -11,7 +11,7 @@
     "terrainTypes": ["Forest", "Rocky"],
     "description": "Beautiful forested trail with scenic overlooks and moderate elevation changes.",
     "userRating": 4.5,
-    "completed": true
+    "completed": false
   },
   {
     "id": 1002,
@@ -25,7 +25,7 @@
     "terrainTypes": ["Mountain", "Rocky"],
     "description": "Challenging climb to stunning views at Table Rock summit. Steep sections near the top.",
     "userRating": 4.8,
-    "completed": true
+    "completed": false
   },
   {
     "id": 1003,
@@ -39,7 +39,7 @@
     "terrainTypes": ["Forest", "Creek"],
     "description": "Follows a mountain stream through lush forest. Great for families.",
     "userRating": 4.3,
-    "completed": true
+    "completed": false
   },
   {
     "id": 1004,
