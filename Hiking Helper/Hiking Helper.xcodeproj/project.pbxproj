@@ -7,6 +7,17 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		9E420C842ECE5F01002C6514 /* Goal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E420C832ECE5F01002C6514 /* Goal.swift */; };
+		9E420C862ECE5FC3002C6514 /* GoalsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E420C852ECE5FC3002C6514 /* GoalsView.swift */; };
+		9E420C882ECE65EA002C6514 /* GoalsDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E420C872ECE65EA002C6514 /* GoalsDataManager.swift */; };
+		9E420C8A2ECF9774002C6514 /* StateSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E420C892ECF9774002C6514 /* StateSelectionView.swift */; };
+		9E420C8C2ECF9A6E002C6514 /* old_SC.json in Resources */ = {isa = PBXBuildFile; fileRef = 9E420C8B2ECF9A6E002C6514 /* old_SC.json */; };
+		9E420C8E2ECF9BF1002C6514 /* TrailDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E420C8D2ECF9BF1002C6514 /* TrailDetailView.swift */; };
+		9E420C912EDE32A9002C6514 /* LoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E420C902EDE32A9002C6514 /* LoadingView.swift */; };
+		9E420C932EDF6F08002C6514 /* Secrets.plist in Resources */ = {isa = PBXBuildFile; fileRef = 9E420C922EDF6F08002C6514 /* Secrets.plist */; };
+		9E420C9D2EE7A9E3002C6514 /* trails_SC.json in Resources */ = {isa = PBXBuildFile; fileRef = 9E420C9C2EE7A9E3002C6514 /* trails_SC.json */; };
+		9E420C9F2EE7A9ED002C6514 /* trails_NC.json in Resources */ = {isa = PBXBuildFile; fileRef = 9E420C9E2EE7A9EC002C6514 /* trails_NC.json */; };
+		9E420CA12EE7AA0C002C6514 /* trails_GA.json in Resources */ = {isa = PBXBuildFile; fileRef = 9E420CA02EE7AA0B002C6514 /* trails_GA.json */; };
 		9E51A6162E91A25600AED38D /* Hiking_HelperApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E51A6152E91A25600AED38D /* Hiking_HelperApp.swift */; };
 		9E51A6182E91A25600AED38D /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E51A6172E91A25600AED38D /* ContentView.swift */; };
 		9E51A61A2E91A25A00AED38D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9E51A6192E91A25A00AED38D /* Assets.xcassets */; };
@@ -16,6 +27,20 @@
 		9E51A6342E91A25B00AED38D /* Hiking_HelperUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E51A6332E91A25B00AED38D /* Hiking_HelperUITestsLaunchTests.swift */; };
 		9E51A6942EA143CC00AED38D /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E51A6932EA143CC00AED38D /* ProfileView.swift */; };
 		9E51A6962EA143F900AED38D /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E51A6952EA143F900AED38D /* HomeView.swift */; };
+		9E51A69A2EA40EDF00AED38D /* QuestionaureManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E51A6992EA40EDF00AED38D /* QuestionaureManager.swift */; };
+		9E51A69C2EA410E500AED38D /* QuestionnaireView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E51A69B2EA410E500AED38D /* QuestionnaireView.swift */; };
+		9E51A69E2EA41FA200AED38D /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E51A69D2EA41FA200AED38D /* SettingsView.swift */; };
+		9EB74D4E2EB6F7D40088C447 /* Trail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EB74D4D2EB6F7D40088C447 /* Trail.swift */; };
+		9EB74D542EB703BA0088C447 /* TrailFilterSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EB74D532EB703BA0088C447 /* TrailFilterSettings.swift */; };
+		9EB74D582EBBD83E0088C447 /* JSONLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EB74D572EBBD83E0088C447 /* JSONLoader.swift */; };
+		9EB74D5D2EBBDDEC0088C447 /* UserPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EB74D5C2EBBDDEC0088C447 /* UserPreferences.swift */; };
+		9EB74D5F2EBBDEE10088C447 /* DataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EB74D5E2EBBDEE10088C447 /* DataManager.swift */; };
+		9EB74D612EBBE7800088C447 /* Question.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EB74D602EBBE7800088C447 /* Question.swift */; };
+		9EB74D652EBBE8C60088C447 /* HikeRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EB74D642EBBE8C60088C447 /* HikeRowView.swift */; };
+		9EB74D6D2EC649C60088C447 /* ChatbotView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EB74D6C2EC649C60088C447 /* ChatbotView.swift */; };
+		9EB74D712EC64A1E0088C447 /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EB74D702EC64A1E0088C447 /* ChatMessage.swift */; };
+		9EB74D792EC64CA50088C447 /* OpenAIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EB74D782EC64CA50088C447 /* OpenAIService.swift */; };
+		9EB74D7B2EC64CD50088C447 /* APIConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EB74D7A2EC64CD50088C447 /* APIConfig.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -36,6 +61,17 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		9E420C832ECE5F01002C6514 /* Goal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Goal.swift; sourceTree = "<group>"; };
+		9E420C852ECE5FC3002C6514 /* GoalsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalsView.swift; sourceTree = "<group>"; };
+		9E420C872ECE65EA002C6514 /* GoalsDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalsDataManager.swift; sourceTree = "<group>"; };
+		9E420C892ECF9774002C6514 /* StateSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StateSelectionView.swift; sourceTree = "<group>"; };
+		9E420C8B2ECF9A6E002C6514 /* old_SC.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = old_SC.json; sourceTree = "<group>"; };
+		9E420C8D2ECF9BF1002C6514 /* TrailDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrailDetailView.swift; sourceTree = "<group>"; };
+		9E420C902EDE32A9002C6514 /* LoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingView.swift; sourceTree = "<group>"; };
+		9E420C922EDF6F08002C6514 /* Secrets.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Secrets.plist; sourceTree = "<group>"; };
+		9E420C9C2EE7A9E3002C6514 /* trails_SC.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = trails_SC.json; sourceTree = "<group>"; };
+		9E420C9E2EE7A9EC002C6514 /* trails_NC.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = trails_NC.json; sourceTree = "<group>"; };
+		9E420CA02EE7AA0B002C6514 /* trails_GA.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = trails_GA.json; sourceTree = "<group>"; };
 		9E51A6122E91A25600AED38D /* Hiking Helper.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Hiking Helper.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		9E51A6152E91A25600AED38D /* Hiking_HelperApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Hiking_HelperApp.swift; sourceTree = "<group>"; };
 		9E51A6172E91A25600AED38D /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -49,6 +85,20 @@
 		9E51A6332E91A25B00AED38D /* Hiking_HelperUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Hiking_HelperUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		9E51A6932EA143CC00AED38D /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		9E51A6952EA143F900AED38D /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		9E51A6992EA40EDF00AED38D /* QuestionaureManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionaureManager.swift; sourceTree = "<group>"; };
+		9E51A69B2EA410E500AED38D /* QuestionnaireView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionnaireView.swift; sourceTree = "<group>"; };
+		9E51A69D2EA41FA200AED38D /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		9EB74D4D2EB6F7D40088C447 /* Trail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Trail.swift; sourceTree = "<group>"; };
+		9EB74D532EB703BA0088C447 /* TrailFilterSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrailFilterSettings.swift; sourceTree = "<group>"; };
+		9EB74D572EBBD83E0088C447 /* JSONLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONLoader.swift; sourceTree = "<group>"; };
+		9EB74D5C2EBBDDEC0088C447 /* UserPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserPreferences.swift; sourceTree = "<group>"; };
+		9EB74D5E2EBBDEE10088C447 /* DataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataManager.swift; sourceTree = "<group>"; };
+		9EB74D602EBBE7800088C447 /* Question.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Question.swift; sourceTree = "<group>"; };
+		9EB74D642EBBE8C60088C447 /* HikeRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HikeRowView.swift; sourceTree = "<group>"; };
+		9EB74D6C2EC649C60088C447 /* ChatbotView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatbotView.swift; sourceTree = "<group>"; };
+		9EB74D702EC64A1E0088C447 /* ChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
+		9EB74D782EC64CA50088C447 /* OpenAIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIService.swift; sourceTree = "<group>"; };
+		9EB74D7A2EC64CD50088C447 /* APIConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIConfig.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -99,13 +149,16 @@
 		9E51A6142E91A25600AED38D /* Hiking Helper */ = {
 			isa = PBXGroup;
 			children = (
+				9EB74D6B2EC649610088C447 /* Services */,
+				9EB74D4F2EB6F8700088C447 /* Resources */,
+				9EB74D4A2EB6F74D0088C447 /* Models */,
+				9E51A6982EA40EBB00AED38D /* Utilities */,
+				9E51A6972EA40E9A00AED38D /* Views */,
 				9E51A6152E91A25600AED38D /* Hiking_HelperApp.swift */,
-				9E51A6932EA143CC00AED38D /* ProfileView.swift */,
-				9E51A6952EA143F900AED38D /* HomeView.swift */,
-				9E51A6172E91A25600AED38D /* ContentView.swift */,
 				9E51A6192E91A25A00AED38D /* Assets.xcassets */,
 				9E51A61B2E91A25A00AED38D /* Hiking_Helper.entitlements */,
 				9E51A61C2E91A25A00AED38D /* Preview Content */,
+				9E420C922EDF6F08002C6514 /* Secrets.plist */,
 			);
 			path = "Hiking Helper";
 			sourceTree = "<group>";
@@ -133,6 +186,76 @@
 				9E51A6332E91A25B00AED38D /* Hiking_HelperUITestsLaunchTests.swift */,
 			);
 			path = "Hiking HelperUITests";
+			sourceTree = "<group>";
+		};
+		9E51A6972EA40E9A00AED38D /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				9EB74D6C2EC649C60088C447 /* ChatbotView.swift */,
+				9E51A6172E91A25600AED38D /* ContentView.swift */,
+				9E51A6952EA143F900AED38D /* HomeView.swift */,
+				9E51A6932EA143CC00AED38D /* ProfileView.swift */,
+				9E51A69B2EA410E500AED38D /* QuestionnaireView.swift */,
+				9E51A69D2EA41FA200AED38D /* SettingsView.swift */,
+				9EB74D642EBBE8C60088C447 /* HikeRowView.swift */,
+				9E420C852ECE5FC3002C6514 /* GoalsView.swift */,
+				9E420C892ECF9774002C6514 /* StateSelectionView.swift */,
+				9E420C8D2ECF9BF1002C6514 /* TrailDetailView.swift */,
+				9E420C902EDE32A9002C6514 /* LoadingView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		9E51A6982EA40EBB00AED38D /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				9E51A6992EA40EDF00AED38D /* QuestionaureManager.swift */,
+				9EB74D572EBBD83E0088C447 /* JSONLoader.swift */,
+				9EB74D5C2EBBDDEC0088C447 /* UserPreferences.swift */,
+				9EB74D5E2EBBDEE10088C447 /* DataManager.swift */,
+				9E420C872ECE65EA002C6514 /* GoalsDataManager.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		9EB74D4A2EB6F74D0088C447 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				9EB74D4D2EB6F7D40088C447 /* Trail.swift */,
+				9EB74D532EB703BA0088C447 /* TrailFilterSettings.swift */,
+				9EB74D602EBBE7800088C447 /* Question.swift */,
+				9EB74D702EC64A1E0088C447 /* ChatMessage.swift */,
+				9E420C832ECE5F01002C6514 /* Goal.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		9EB74D4F2EB6F8700088C447 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				9EB74D5B2EBBD8DB0088C447 /* Data */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		9EB74D5B2EBBD8DB0088C447 /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				9E420C9C2EE7A9E3002C6514 /* trails_SC.json */,
+				9E420C9E2EE7A9EC002C6514 /* trails_NC.json */,
+				9E420CA02EE7AA0B002C6514 /* trails_GA.json */,
+				9E420C8B2ECF9A6E002C6514 /* old_SC.json */,
+			);
+			path = Data;
+			sourceTree = "<group>";
+		};
+		9EB74D6B2EC649610088C447 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				9EB74D782EC64CA50088C447 /* OpenAIService.swift */,
+				9EB74D7A2EC64CD50088C447 /* APIConfig.swift */,
+			);
+			path = Services;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -240,7 +363,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				9E51A61E2E91A25A00AED38D /* Preview Assets.xcassets in Resources */,
+				9E420C932EDF6F08002C6514 /* Secrets.plist in Resources */,
+				9E420C9D2EE7A9E3002C6514 /* trails_SC.json in Resources */,
+				9E420CA12EE7AA0C002C6514 /* trails_GA.json in Resources */,
 				9E51A61A2E91A25A00AED38D /* Assets.xcassets in Resources */,
+				9E420C9F2EE7A9ED002C6514 /* trails_NC.json in Resources */,
+				9E420C8C2ECF9A6E002C6514 /* old_SC.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -265,10 +393,30 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9EB74D712EC64A1E0088C447 /* ChatMessage.swift in Sources */,
+				9EB74D652EBBE8C60088C447 /* HikeRowView.swift in Sources */,
+				9E420C882ECE65EA002C6514 /* GoalsDataManager.swift in Sources */,
+				9EB74D7B2EC64CD50088C447 /* APIConfig.swift in Sources */,
+				9EB74D612EBBE7800088C447 /* Question.swift in Sources */,
+				9E51A69E2EA41FA200AED38D /* SettingsView.swift in Sources */,
 				9E51A6182E91A25600AED38D /* ContentView.swift in Sources */,
+				9EB74D5F2EBBDEE10088C447 /* DataManager.swift in Sources */,
+				9EB74D6D2EC649C60088C447 /* ChatbotView.swift in Sources */,
 				9E51A6962EA143F900AED38D /* HomeView.swift in Sources */,
+				9EB74D4E2EB6F7D40088C447 /* Trail.swift in Sources */,
+				9EB74D542EB703BA0088C447 /* TrailFilterSettings.swift in Sources */,
+				9E51A69C2EA410E500AED38D /* QuestionnaireView.swift in Sources */,
+				9EB74D582EBBD83E0088C447 /* JSONLoader.swift in Sources */,
+				9EB74D792EC64CA50088C447 /* OpenAIService.swift in Sources */,
+				9E420C862ECE5FC3002C6514 /* GoalsView.swift in Sources */,
+				9E420C842ECE5F01002C6514 /* Goal.swift in Sources */,
+				9EB74D5D2EBBDDEC0088C447 /* UserPreferences.swift in Sources */,
+				9E420C8E2ECF9BF1002C6514 /* TrailDetailView.swift in Sources */,
 				9E51A6942EA143CC00AED38D /* ProfileView.swift in Sources */,
+				9E420C8A2ECF9774002C6514 /* StateSelectionView.swift in Sources */,
+				9E420C912EDE32A9002C6514 /* LoadingView.swift in Sources */,
 				9E51A6162E91A25600AED38D /* Hiking_HelperApp.swift in Sources */,
+				9E51A69A2EA40EDF00AED38D /* QuestionaureManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -425,11 +573,16 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "Hiking Helper/Hiking_Helper.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Hiking Helper/Preview Content\"";
+				DEVELOPMENT_TEAM = Q9TVQZ9US2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Hiking-Helper-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = HH;
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Allow access to select your Profile Picture!";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -446,7 +599,9 @@
 				MACOSX_DEPLOYMENT_TARGET = 13.6;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.elianajohnson.Hiking-Helper";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = "com.eljohn.Hiking-Helper";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -461,11 +616,16 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "Hiking Helper/Hiking_Helper.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Hiking Helper/Preview Content\"";
+				DEVELOPMENT_TEAM = Q9TVQZ9US2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Hiking-Helper-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = HH;
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Allow access to select your Profile Picture!";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -482,7 +642,9 @@
 				MACOSX_DEPLOYMENT_TARGET = 13.6;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.elianajohnson.Hiking-Helper";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = "com.eljohn.Hiking-Helper";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SWIFT_EMIT_LOC_STRINGS = YES;

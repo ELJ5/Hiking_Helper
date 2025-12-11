@@ -306,11 +306,7 @@ struct ProfileView: View {
         }
         .navigationBarBackButtonHidden(true)
         .onAppear {
-            // Temporary test - add some completed trails
-            if userPreferences.trailPreferences.completedTrails.isEmpty {
-                userPreferences.trailPreferences.completedTrails = [1001, 1002, 1003]
-            }
-            
+ 
             if !userPreferences.needsOnboarding {
                 dataManager.loadTrailsIfNeeded()
             }
@@ -408,8 +404,8 @@ struct PreferenceRow: View {
     prefs.trailPreferences.helper = true
     prefs.trailPreferences.currentCapability = "2-4 miles"
     prefs.trailPreferences.desiredDistance = "6+ miles"
-    prefs.trailPreferences.completedTrails = [1001, 1002, 1003]  // Sample completed trail IDs
-    
+    prefs.trailPreferences.completedTrails = []  // Sample completed trail IDs
+
     return NavigationStack {
         ProfileView(isPresented: .constant(true))
             .environmentObject(prefs)

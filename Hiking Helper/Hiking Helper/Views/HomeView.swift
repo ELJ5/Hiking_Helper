@@ -18,11 +18,14 @@ struct HomeView: View {
     @State private var navigateToChatbot = false
     @State private var navigateToGoals = false
     @State private var searchText = ""
-    @State private var showAllRecommended = false
-    @State private var showAllEasier = false
-    @State private var showAllOther = false
+    @State private var recommendedTrailsToShow = 3
+    @State private var easierTrailsToShow = 3
+    @State private var otherTrailsToShow = 2
     @State private var cameraPosition: MapCameraPosition = .automatic
     @State private var selectedTrail: Trail?
+    
+
+    private let maxMapTrails = 25
     
     // initializer
     init() {
@@ -209,6 +212,10 @@ struct HomeView: View {
         }
         .onChange(of: userPreferences.trailPreferences.selectedStates) { _, _ in
             updateMapRegion()
+            // Reset trail counts when preferences change
+            recommendedTrailsToShow = 3
+            easierTrailsToShow = 3
+            otherTrailsToShow = 2
         }
 
     }
@@ -227,7 +234,7 @@ struct HomeView: View {
                 }) {
                     Image(systemName: showChatbot ? "xmark.circle.fill" : "message.fill")
                         .font(.title)
-                        .foregroundColor(.primaryGreen)   
+                        .foregroundColor(.primaryGreen)
                         .padding(.leading, 20)
                         .padding(.top, 10)
                 }
@@ -242,7 +249,7 @@ struct HomeView: View {
             }) {
                 Image(systemName: showProfile ? "xmark.circle.fill" : "person.fill")
                     .font(.title)
-                    .foregroundColor(.primaryGreen)   
+                    .foregroundColor(.primaryGreen)
                     .padding(.trailing, 20)
                     .padding(.top, 10)
             }
@@ -271,7 +278,7 @@ struct HomeView: View {
             
             ZStack {
                 Circle()
-                    .stroke(.borderColor1, lineWidth: 10)   
+                    .stroke(.borderColor1, lineWidth: 10)
                 
                 Circle()
                     .trim(from: 0, to: CGFloat(goalDataManager.completionPercentage / 100))
@@ -290,10 +297,10 @@ struct HomeView: View {
                     Text("\(goalDataManager.completedGoals.count)")
                         .font(.title3)
                         .fontWeight(.bold)
-                        .foregroundColor(.primaryGreen)   
+                        .foregroundColor(.primaryGreen)
                     Text("of \(goalDataManager.goals.count)")
                         .font(.caption)
-                        .foregroundColor(.textSecondary)   
+                        .foregroundColor(.textSecondary)
                 }
             }
             .frame(width: 125, height: 125)
@@ -316,7 +323,7 @@ struct HomeView: View {
                     navigateToGoals = true
                 }) {
                     Image(systemName: "arrow.right.circle.fill")
-                        .foregroundColor(.primaryBlue)   
+                        .foregroundColor(.primaryBlue)
                         .padding(.top, 15)
                 }
             }
@@ -338,7 +345,7 @@ struct HomeView: View {
             VStack(spacing: 8) {
                 Image(systemName: "target")
                     .font(.title2)
-                    .foregroundColor(.textSecondary)   
+                    .foregroundColor(.textSecondary)
                 Text("No goals yet")
                     .font(.caption)
                     .foregroundColor(.textSecondary)
@@ -348,7 +355,7 @@ struct HomeView: View {
                     Text("Add Goals")
                         .font(.caption)
                         .fontWeight(.medium)
-                        .foregroundColor(.primaryBlue)   
+                        .foregroundColor(.primaryBlue)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -373,7 +380,7 @@ struct HomeView: View {
                                 goalDataManager.toggleGoalCompletion(id: goal.id)
                             }) {
                                 Image(systemName: "circle")
-                                    .foregroundColor(.primaryBlue)   
+                                    .foregroundColor(.primaryBlue)
                             }
                             .buttonStyle(PlainButtonStyle())
                             
@@ -412,14 +419,14 @@ struct HomeView: View {
                         .foregroundColor(.textPrimary)  // Added
                     Text("Trails matching your Preferences")
                         .font(.caption)
-                        .foregroundColor(.textSecondary)   
+                        .foregroundColor(.textSecondary)
                 }
                 
                 Spacer()
                 
                 Text("\(getMatchingTrails().count) trails")
                     .font(.caption)
-                    .foregroundColor(.textSecondary)   
+                    .foregroundColor(.textSecondary)
             }
             
             recommendedTrailsList
@@ -433,42 +440,66 @@ struct HomeView: View {
             VStack(spacing: 8) {
                 Image(systemName: "leaf")
                     .font(.title)
-                    .foregroundColor(.textSecondary)   
+                    .foregroundColor(.textSecondary)
                 Text("No trails match your preferences")
                     .font(.subheadline)
-                    .foregroundColor(.textSecondary)   
+                    .foregroundColor(.textSecondary)
                 Text("Try adjusting your settings in Profile")
                     .font(.caption)
-                    .foregroundColor(.textSecondary)   
+                    .foregroundColor(.textSecondary)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 20)
         } else {
             VStack(spacing: 10) {
-                ForEach(getMatchingTrails().prefix(showAllRecommended ? getMatchingTrails().count : 3)) { trail in
+                ForEach(getMatchingTrails().prefix(recommendedTrailsToShow)) { trail in
                     TrailSearchResultRow(
                         trail: trail,
                         isCompleted: userPreferences.trailPreferences.isTrailCompleted(trail.id)
                     )
                 }
                 
-                if getMatchingTrails().count > 3 {
+                if getMatchingTrails().count > recommendedTrailsToShow {
                     Button(action: {
                         withAnimation {
-                            showAllRecommended.toggle()
+                            recommendedTrailsToShow += 10
                         }
                     }) {
                         HStack {
-                            Text(showAllRecommended ? "Show Less" : "Show \(getMatchingTrails().count - 3) More")
+                            let remaining = getMatchingTrails().count - recommendedTrailsToShow
+                            Text("Show \(min(remaining, 10)) More")
                                 .font(.subheadline)
                                 .fontWeight(.medium)
-                            Image(systemName: showAllRecommended ? "chevron.up" : "chevron.down")
+                            Image(systemName: "chevron.down")
                                 .font(.caption)
                         }
-                        .foregroundColor(.primaryBlue)   
+                        .foregroundColor(.primaryBlue)
                         .padding(.vertical, 8)
                         .frame(maxWidth: .infinity)
-                        .background(Color.primaryBlue.opacity(0.1))   
+                        .background(Color.primaryBlue.opacity(0.1))
+                        .cornerRadius(8)
+                    }
+                    .padding(.top, 4)
+                }
+                
+                // Show less button when viewing more than initial 3
+                if recommendedTrailsToShow > 3 {
+                    Button(action: {
+                        withAnimation {
+                            recommendedTrailsToShow = 3
+                        }
+                    }) {
+                        HStack {
+                            Text("Show Less")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            Image(systemName: "chevron.up")
+                                .font(.caption)
+                        }
+                        .foregroundColor(.primaryBlue)
+                        .padding(.vertical, 8)
+                        .frame(maxWidth: .infinity)
+                        .background(Color.primaryBlue.opacity(0.1))
                         .cornerRadius(8)
                     }
                     .padding(.top, 4)
@@ -489,35 +520,59 @@ struct HomeView: View {
                             .foregroundColor(.textPrimary)  // Added
                         Text("Easier trails to help you progress")
                             .font(.caption)
-                            .foregroundColor(.textSecondary)   
+                            .foregroundColor(.textSecondary)
                     }
                     
                     Spacer()
                     
                     Text("\(getEasierTrails().count) trails")
                         .font(.caption)
-                        .foregroundColor(.textSecondary)   
+                        .foregroundColor(.textSecondary)
                 }
                 
                 VStack(spacing: 10) {
-                    ForEach(getEasierTrails().prefix(showAllEasier ? getEasierTrails().count : 3)) { trail in
+                    ForEach(getEasierTrails().prefix(easierTrailsToShow)) { trail in
                         TrailSearchResultRow(
                             trail: trail,
                             isCompleted: userPreferences.trailPreferences.isTrailCompleted(trail.id)
                         )
                     }
                     
-                    if getEasierTrails().count > 3 {
+                    if getEasierTrails().count > easierTrailsToShow {
                         Button(action: {
                             withAnimation {
-                                showAllEasier.toggle()
+                                easierTrailsToShow += 10
                             }
                         }) {
                             HStack {
-                                Text(showAllEasier ? "Show Less" : "Show \(getEasierTrails().count - 3) More")
+                                let remaining = getEasierTrails().count - easierTrailsToShow
+                                Text("Show \(min(remaining, 10)) More")
                                     .font(.subheadline)
                                     .fontWeight(.medium)
-                                Image(systemName: showAllEasier ? "chevron.up" : "chevron.down")
+                                Image(systemName: "chevron.down")
+                                    .font(.caption)
+                            }
+                            .foregroundColor(.primaryGreen)
+                            .padding(.vertical, 8)
+                            .frame(maxWidth: .infinity)
+                            .background(Color.lightGreen.opacity(0.1))
+                            .cornerRadius(8)
+                        }
+                        .padding(.top, 4)
+                    }
+                    
+                    // Show less button when viewing more than initial 3
+                    if easierTrailsToShow > 3 {
+                        Button(action: {
+                            withAnimation {
+                                easierTrailsToShow = 3
+                            }
+                        }) {
+                            HStack {
+                                Text("Show Less")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                                Image(systemName: "chevron.up")
                                     .font(.caption)
                             }
                             .foregroundColor(.primaryGreen)
@@ -546,7 +601,7 @@ struct HomeView: View {
                 
                 Text("\(getNonMatchingTrails().count) trails")
                     .font(.caption)
-                    .foregroundColor(.textSecondary)   
+                    .foregroundColor(.textSecondary)
             }
             
             searchBar
@@ -558,20 +613,24 @@ struct HomeView: View {
     private var searchBar: some View {
         HStack {
             Image(systemName: "magnifyingglass")
-                .foregroundColor(.textSecondary)   
+                .foregroundColor(.textSecondary)
             
             TextField("Search by name or state", text: $searchText)
                 .textFieldStyle(PlainTextFieldStyle())
+                .onChange(of: searchText) { _, _ in
+                    // Reset count when search changes
+                    otherTrailsToShow = 2
+                }
             
             if !searchText.isEmpty {
                 Button(action: { searchText = "" }) {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.textSecondary)   
+                        .foregroundColor(.textSecondary)
                 }
             }
         }
         .padding(12)
-        .background(Color.surface)   
+        .background(Color.surface)
         .cornerRadius(10)
     }
 
@@ -590,24 +649,48 @@ struct HomeView: View {
             .padding(.vertical, 20)
         } else {
             VStack(spacing: 10) {
-                ForEach(getNonMatchingTrails().prefix(showAllOther ? getNonMatchingTrails().count : 2)) { trail in
+                ForEach(getNonMatchingTrails().prefix(otherTrailsToShow)) { trail in
                     TrailSearchResultRow(
                         trail: trail,
                         isCompleted: userPreferences.trailPreferences.isTrailCompleted(trail.id)
                     )
                 }
                 
-                if getNonMatchingTrails().count > 2 {
+                if getNonMatchingTrails().count > otherTrailsToShow {
                     Button(action: {
                         withAnimation {
-                            showAllOther.toggle()
+                            otherTrailsToShow += 10
                         }
                     }) {
                         HStack {
-                            Text(showAllOther ? "Show Less" : "Show \(getNonMatchingTrails().count - 2) More")
+                            let remaining = getNonMatchingTrails().count - otherTrailsToShow
+                            Text("Show \(min(remaining, 10)) More")
                                 .font(.subheadline)
                                 .fontWeight(.medium)
-                            Image(systemName: showAllOther ? "chevron.up" : "chevron.down")
+                            Image(systemName: "chevron.down")
+                                .font(.caption)
+                        }
+                        .foregroundColor(.accentBlue)
+                        .padding(.vertical, 8)
+                        .frame(maxWidth: .infinity)
+                        .background(Color.accentBlue.opacity(0.1))
+                        .cornerRadius(8)
+                    }
+                    .padding(.top, 4)
+                }
+                
+                // Show less button when viewing more than initial 2
+                if otherTrailsToShow > 2 {
+                    Button(action: {
+                        withAnimation {
+                            otherTrailsToShow = 2
+                        }
+                    }) {
+                        HStack {
+                            Text("Show Less")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            Image(systemName: "chevron.up")
                                 .font(.caption)
                         }
                         .foregroundColor(.accentBlue)
@@ -624,11 +707,23 @@ struct HomeView: View {
 
     private var mapSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Recommended Trails Map")
-                .font(.title2)
-                .bold()
-                .foregroundColor(.textPrimary)
-                .padding(.top, 20)
+            HStack {
+                Text("Recommended Trails Map")
+                    .font(.title2)
+                    .bold()
+                    .foregroundColor(.textPrimary)
+                    .padding(.top, 20)
+                
+                Spacer()
+                
+                // Show indicator if trails are limited
+                if getMatchingTrails().count > maxMapTrails {
+                    Text("Showing \(maxMapTrails) of \(getMatchingTrails().count)")
+                        .font(.caption)
+                        .foregroundColor(.textSecondary)
+                        .padding(.top, 20)
+                }
+            }
             
             mapContent
         }
@@ -654,7 +749,8 @@ struct HomeView: View {
             }
         } else {
             Map(position: $cameraPosition, selection: $selectedTrail) {
-                ForEach(getMatchingTrails()) { trail in
+                // Limit trails shown on map to prevent overcrowding
+                ForEach(getMatchingTrails().prefix(maxMapTrails)) { trail in
                     Annotation(trail.trailName, coordinate: CLLocationCoordinate2D(
                         latitude: trail.latitude,
                         longitude: trail.longitude
@@ -713,7 +809,7 @@ struct HomeView: View {
                         
                     }
                     .font(.caption)
-                    .foregroundColor(.textSecondary)   
+                    .foregroundColor(.textSecondary)
                 }
                 
                 Spacer()
@@ -729,7 +825,7 @@ struct HomeView: View {
                         .foregroundColor(.white)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
-                        .background(Color.primaryBlue)   
+                        .background(Color.primaryBlue)
                         .cornerRadius(8)
                 }
             }
@@ -742,17 +838,17 @@ struct HomeView: View {
     
     // Helper function to update map region based on recommended trails
     private func updateMapRegion() {
-        let trails = getMatchingTrails()
+        let trails = Array(getMatchingTrails().prefix(maxMapTrails))
         guard !trails.isEmpty else {
             cameraPosition = .automatic
             return
         }
         
-        // Calculate center point of all trails
+        // Calculate center point of displayed trails
         let avgLat = trails.map { $0.latitude }.reduce(0, +) / Double(trails.count)
         let avgLon = trails.map { $0.longitude }.reduce(0, +) / Double(trails.count)
         
-        // Calculate span to show all trails
+        // Calculate span to show all displayed trails
         let latitudes = trails.map { $0.latitude }
         let longitudes = trails.map { $0.longitude }
         
@@ -844,10 +940,10 @@ struct TrailSearchResultRow: View {
                 
                 Image(systemName: "chevron.right")
                     .font(.caption)
-                    .foregroundColor(.textSecondary)   
+                    .foregroundColor(.textSecondary)
             }
             .padding(12)
-            .background(Color.surface)   
+            .background(Color.surface)
             .cornerRadius(10)
             .overlay(
                 RoundedRectangle(cornerRadius: 16) // Define the rounded rectangle shape
